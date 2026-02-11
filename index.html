@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sid Ag - Portfolio</title>
+    <link rel="icon" href="2.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .skill-icon {
+            font-size: 3rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Section (Desktop Navbar) -->
+    <header class="fixed top-0 left-0 right-0 z-50 p-4 hidden lg:flex justify-center">
+        <div class="navbar-custom flex items-center space-x-4 p-2 shadow-xl">
+            <!-- Logo -->
+            <a href="#" class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-gray-900 shadow-md">
+                <img src="2.svg" alt="Logo" class="w-6 h-6">
+            </a>
+
+            <!-- Desktop Navigation -->
+            <nav class="flex space-x-2 text-gray-800 font-medium">
+                <a href="#skills" class="navbar-link">Skills</a>
+                <a href="#projects" class="navbar-link">Projects</a>
+                <a href="#contact" class="navbar-link">Contact</a>
+            </nav>
+
+            <!-- Email Contact -->
+            <a href="mailto:agsid502@gmail.com" class="navbar-email text-sm whitespace-nowrap">
+                agsid502@gmail.com
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-[#3A3982] to-[#4A47A9] text-white py-20 sm:py-32 text-center">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-center mb-8">
+                <img src="1.svg" alt="Sid Ag Portfolio Logo" class="w-500 h-500 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+            </div>
+            <a href="#projects" class="inline-block bg-white text-blue-700 font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:bg-gray-100">
+                View My Work
+            </a>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="py-16 sm:py-24">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-12">
+                My Core Skills
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+                <!-- HTML5 -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <i class="devicon-html5-plain skill-icon text-gray-900"></i>
+                    <span class="text-lg font-semibold mt-2 text-gray-900">HTML5</span>
+                </div>
+                <!-- CSS3 -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <i class="devicon-css3-plain skill-icon text-gray-900"></i>
+                    <span class="text-lg font-semibold mt-2 text-gray-900">CSS3</span>
+                </div>
+                <!-- JavaScript -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <i class="devicon-javascript-plain skill-icon text-gray-900"></i>
+                    <span class="text-lg font-semibold mt-2 text-gray-900">JavaScript</span>
+                </div>
+                <!-- Python -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <i class="devicon-python-plain skill-icon text-gray-900"></i>
+                    <span class="text-lg font-semibold mt-2 text-gray-900">Python</span>
+                </div>
+                <!-- Arduino -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <i class="devicon-arduino-plain skill-icon text-gray-900"></i>
+                    <span class="text-lg font-semibold mt-2 text-gray-900">Arduino</span>
+                </div>
+                <!-- Block Coding -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <img src="https://img.itch.zone/aW1nLzE2MzM0Mjg5LnBuZw==/original/o/iYuv.png" class="h-16 w-16 object-contain">
+                    <span class="text-lg font-semibold mt-2 text-gray-900">Block Coding</span>
+                </div>
+                <!-- Spike Prime -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <img src="https://play-lh.googleusercontent.com/0ZVVegD2UTczthb8v5tu19TXiJURZpBqUPUPAUrjvEUDFvbcWDJk_dnCxUwJMb1cMz05=w240-h480-rw" alt="Spike Prime Icon" class="h-16 w-16 rounded-full object-cover">
+                    <span class="text-lg font-semibold mt-2 text-gray-900">Spike Prime</span>
+                </div>
+                <!-- Java -->
+                <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl shadow-lg">
+                    <i class="devicon-java-plain skill-icon text-gray-900"></i>
+                    <span class="text-lg font-semibold mt-2 text-gray-900">Java</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-16 sm:py-24">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl sm:text-4xl font-bold text-center text-white mb-12">
+                My Projects
+            </h2>
+            <!-- Projects will be dynamically loaded here by JavaScript -->
+            <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Project cards generated by script.js -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="bg-white bg-opacity-10 text-white py-16 sm:py-24">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-6">Let's Build Something Great Together</h2>
+            <p class="text-lg max-w-2xl mx-auto mb-8 opacity-80">
+                I'm currently open to new opportunities and collaborations. Feel free to reach out and say hello!
+            </p>
+            <a href="mailto:agsid502@gmail.com" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                Email Me
+            </a>
+            <div class="flex justify-center space-x-6 mt-8">
+                <a href="https://github.com/agsid" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors duration-300">
+                    <i class="devicon-github-original text-2xl"></i>
+                </a>
+                <a href="https://www.instagram.com/dino.axolotl/" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-white transition-colors duration-300">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M12.315 2c2.43 0 2.712.01 3.653.047 1.053.044 1.74.225 2.185.385.492.179.828.384 1.253.809.425.425.63.761.809 1.253.16.445.341 1.132.385 2.185.037.941.047 1.223.047 3.653s-.01 2.712-.047 3.653c-.044 1.053-.225 1.74-.385 2.185-.179.492-.384.828-.809 1.253-.425.425-.761.63-1.253.809-.445.16-1.132.341-2.185.385-.94.037-1.223.047-3.653.047s-2.712-.01-3.653-.047c-1.053-.044-1.74-.225-2.185-.385-.492-.179-.828-.384-1.253-.809-.425-.425-.63-.761-.809-1.253-.16-.445-.341-1.132-.385-2.185-.037-.941-.047-1.223-.047-3.653s.01-2.712.047-3.653c.044-1.053.225-1.74.385-2.185.179-.492.384.828.809-1.253.425-.425.761-.63 1.253-.809.445-.16 1.132-.341 2.185-.385.941-.037 1.223-.047 3.653-.047zm0-2c-2.673 0-2.99.01-4.042.047C7.309 0.091 6.346 0.28 5.488 0.61c-.853.344-1.48.729-2.115 1.365C2.614 2.614 2.229 3.24 1.885 4.093c-.33 0.867-.52 1.83-.564 2.883C1.26 7.859 1.25 8.175 1.25 11s.01 3.141.047 4.192c.044 1.052.234 2.015.564 2.883.345.853.729 1.48 1.365 2.115.635.636 1.262 1.021 2.115 1.365.867.33 1.83.52 2.883.564 1.052.037 1.369.047 4.192.047s3.141-.01 4.192-.047c1.052-.044 2.015-.234 2.883-.564.853-.345 1.48-.729 2.115-1.365.636-.635 1.021-1.262 1.365-2.115.33-.867.52-1.83.564-2.883.037-1.052.047-1.369.047-4.192s-.01-3.141-.047-4.192c-.044-1.052-.234-2.015-.564-2.883-.345-.853-.729-1.48-1.365-2.115C21.386 2.614 2.229 19.907 1.885c-.867-.33-1.83-.52-2.883-.564C15.141 1.26 14.825 1.25 12 1.25zM12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.656 0-3-1.344-3-3s1.344-3 3-3 3 1.344 3 3-1.344 3-3 3zm5.725-12.235c-.852 0-1.077.375-1.077 1.077s.225 1.077 1.077 1.077c.7 0 1.077-.375 1.077-1.077s-.375-1.077-1.077-1.077z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-900 bg-opacity-20 text-gray-400 py-6 text-center">
+        <div class="container mx-auto px-4">
+            <p class="text-sm">© 2025 Sid Ag. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Mobile Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 lg:hidden bg-gray-900 bg-opacity-90 backdrop-blur-md rounded-t-xl py-2 shadow-xl z-50">
+        <div class="flex justify-around items-center h-16 max-w-lg mx-auto">
+            <a href="#skills" class="mobile-nav-item flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white/10 transition-colors">
+                <div class="icon-bg"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-xs text-white mt-1">Skills</span>
+            </a>
+            <a href="#projects" class="mobile-nav-item flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white/10 transition-colors">
+                <div class="icon-bg"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-1-3m-6.938-9h11.876L19.5 17H4.5L2.062 8H1.5M11.999 7.425C11.999 5.86 10.745 4.5 9.18 4.5S6.36 5.86 6.36 7.425c0 1.564 1.254 2.825 2.819 2.825s2.82-1.261 2.82-2.825zM12 11h9v5l-3 2h-6l-3-2V11z" />
+                </svg>
+                <span class="text-xs text-white mt-1">Projects</span>
+            </a>
+            <a href="#contact" class="mobile-nav-item flex flex-col items-center justify-center p-2 rounded-lg hover:bg-white/10 transition-colors">
+                <div class="icon-bg"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-2 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6m0-4a2 2 0 012-2h10a2 2 0 012 2v2a2 2 0 01-2 2H7a2 2 0 01-2-2V6z" />
+                </svg>
+                <span class="text-xs text-white mt-1">Contact</span>
+            </a>
+        </div>
+    </nav>
+    <script src="projects.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
