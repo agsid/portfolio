@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" type="image/svg+xml" href="  /portfolio/2.svg" />
+  <title>Sid</title>
+  <!-- Tailwind CDN (for GitHub Pages quick use) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* small custom tweaks */
+    :root{
+      --accent-from: #7c3aed; /* purple */
+      --accent-to: #0ea5e9;   /* sky/blue */
+      --bg: #0b1220;
+      --card: #0f1724;
+      --muted: #9aa9bf;
+    }
+    .gradient-accent{
+      background: linear-gradient(90deg,var(--accent-from),var(--accent-to));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    html.dark { background: var(--bg); color: #e6eef8; }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.04); }
+    .muted { color: var(--muted); }
+  </style>
+</head>
+<body class="min-h-screen antialiased">
+  <header class="p-4 border-b border-white/5 mb-6">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg card flex items-center justify-center"><img src="/portfolio/2.svg" alt="Logo" class="w-8 h-8" /></div>
+        <div>
+          <div class="text-sm muted">Good evening</div>
+          <div class="text-xl font-semibold">Sid's Dashboard</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <input id="search" type="search" placeholder="Search courses..." class="px-3 py-2 rounded-lg bg-white/3 placeholder:muted outline-none focus:ring-2 focus:ring-indigo-500" />
+        <button id="refresh" class="px-3 py-2 rounded-lg card">Refresh</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto grid grid-cols-12 gap-6 px-4 pb-12">
+    <!-- Courses -->
+    <section class="col-span-4">
+      <div class="p-4 rounded-2xl card">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-lg font-semibold">Courses</h3>
+          <button id="add-course" class="text-sm muted">+ Add</button>
+        </div>
+        <div id="coursesList" class="space-y-3 max-h-[60vh] overflow-auto"></div>
+      </div>
+    </section>
+    </section>
+
+    <!-- Calendar -->
+    <section class="col-span-8">
+      <div class="p-4 rounded-2xl card flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Calendar</h3>
+        </div>
+
+        <!-- Replace src with your Google Calendar embed iframe src -->
+        <div class="rounded-lg overflow-hidden border border-white/5">
+          <iframe src="https://calendar.google.com/calendar/embed?src=5l06hv28obbk3eohlcsncvo06rkmhjmm%40import.calendar.google.com&ctz=America%2FNew_York" style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Hidden: data + simple editor -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/60 items-center justify-center p-4">
+    <div class="bg-card rounded-xl w-full max-w-2xl p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="font-semibold">Quick Edit Assignments JSON</h4>
+        <button id="closeModal" class="text-sm muted">Close</button>
+      </div>
+      <textarea id="jsonEditor" class="w-full h-64 bg-white/5 p-3 rounded text-sm"></textarea>
+      <div class="flex justify-end gap-2 mt-3">
+        <button id="saveJson" class="px-3 py-2 rounded card">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // CONFIG: update this to your Google Calendar embed URL (iframe src).
+    // To get the embed URL: in Google Calendar -> Settings -> Select calendar -> "Integrate calendar" -> Embed code -> copy src="..." value.
+    const CALENDAR_IFRAME_SRC = ""; // <-- paste your Google Calendar iframe src here (e.g. https://calendar.google.com/calendar/embed?src=...&ctz=America%2FNew_York)
+
+    // If left blank, the page will show a friendly placeholder
+    const calendarFrame = document.getElementById('calendarFrame');
+    if (CALENDAR_IFRAME_SRC) {
+      calendarFrame.src = "https://calendar.google.com/calendar/embed?src=5l06hv28obbk3eohlcsncvo06rkmhjmm%40import.calendar.google.com&ctz=America%2FNew_York" + CALENDAR_IFRAME_SRC;
+    } else {
+      const html =
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#9aa9bf;padding:12px;">
+          <div style="text-align:center;">
+            <div style="font-weight:600;margin-bottom:6px;">Calendar not configured</div>
+            <div style="font-size:13px;">Add your Google Calendar embed URL to <code>CALENDAR_IFRAME_SRC</code> in the page config.</div>
+          </div>
+        </div>
+      calendarFrame.srcdoc = html;
+    }
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>

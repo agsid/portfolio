@@ -1,0 +1,42 @@
+[
+  {
+    "id": "course-1",
+    "name": "Science",
+    "teacher": "Ms. Bagosy",
+    "room": "A period",
+    "color": "#00ff00",
+    "link": "https://wilton.schoology.com/course/7938055758/materials"
+  },
+  {
+    "id": "course-2",
+    "name": "ELA",
+    "teacher": "Mrs. Rubin",
+    "room": "B period",
+    "color": "#E7180B",
+    "link": "https://wilton.schoology.com/course/7938098928/materials"
+  },
+    {
+    "id": "course-3",
+    "name": "Social Studies",
+    "teacher": "Mrs. Avery",
+    "room": "C period",
+    "color": "#8E51FF",
+    "link": "https://wilton.schoology.com/course/7938067929/materials"
+  },
+    {
+    "id": "course-4",
+    "name": "Algebra I",
+    "teacher": "Mrs. Cernera",
+    "room": "D period",
+    "color": "#0ea5e9",
+    "link": "https://wilton.schoology.com/course/7938056331/materials"
+  },
+    {
+    "id": "course-5",
+    "name": "Spanish",
+    "teacher": " Flavia",
+    "room": "E period",
+    "color": "#FFDF20",
+    "link": "https://wilton.schoology.com/course/7938044303/materials   "
+  }
+]

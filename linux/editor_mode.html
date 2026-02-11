@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Mode</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .container {
+      background: rgba(30, 30, 30, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 25px;
+      color: #007aff;
+      text-shadow: 0 0 5px rgba(0, 122, 255, 0.5);
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    input[type="password"] {
+      width: calc(100% - 20px);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.08);
+      color: #e0e0e0;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    input[type="password"]:focus {
+      border-color: #007aff;
+      background-color: rgba(0, 122, 255, 0.1);
+    }
+
+    button {
+      background-color: #007aff;
+      color: white;
+      padding: 10px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #005bb5;
+      transform: translateY(-2px);
+    }
+
+    .status-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: left;
+      display: none;
+    }
+
+    .status-section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #007aff;
+    }
+
+    .status-item {
+      margin-bottom: 10px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-item i {
+      font-size: 1.2rem;
+      color: #4CAF50;
+    }
+
+    #battery-status-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+    }
+
+    .charging-indicator {
+      font-size: 0.8em;
+      color: #4CAF50;
+    }
+
+    .error-message {
+      color: #ff4d4d;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Editor Mode</h1>
+
+    <div id="pin-entry-section">
+      <div class="input-group">
+        <input type="password" id="debugger-pin-input" placeholder="Enter Password">
+      </div>
+      <button id="submit-pin-button">Submit</button>
+      <p id="pin-error-message" class="error-message"></p>
+    </div>
+
+    <div id="status-display-section" class="status-section">
+      <h2>System Status</h2>
+      <div class="status-item">
+        <i class="fas fa-desktop"></i>
+        <span id="running-apps-display">Access Granted.</span>
+      </div>
+      <div class="status-item">
+        <i class="fas fa-battery-full"></i>
+        <span id="battery-status-display">Battery data loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PASSWORD = "Pass_1234";
+
+    const debuggerPinInput = document.getElementById('debugger-pin-input');
+    const submitPinButton = document.getElementById('submit-pin-button');
+    const pinErrorMessage = document.getElementById('pin-error-message');
+    const pinEntrySection = document.getElementById('pin-entry-section');
+    const statusDisplaySection = document.getElementById('status-display-section');
+    const batteryStatusDisplay = document.getElementById('battery-status-display');
+
+    // Function to update battery status
+    function updateBatteryStatus(battery) {
+      const level = Math.floor(battery.level * 100);
+      const icon = battery.charging ? "⚡" : "";
+      batteryStatusDisplay.textContent = `${icon} ${level}% ${battery.charging ? "Charging" : ""}`;
+    }
+
+    function initBatteryMonitoring() {
+      if ('getBattery' in navigator) {
+        navigator.getBattery().then(battery => {
+          updateBatteryStatus(battery);
+          battery.addEventListener('levelchange', () => updateBatteryStatus(battery));
+          battery.addEventListener('chargingchange', () => updateBatteryStatus(battery));
+        }).catch(error => {
+          batteryStatusDisplay.textContent = `Battery API Error: ${error.message}`;
+        });
+      } else {
+        batteryStatusDisplay.textContent = 'Battery Status API not supported.';
+      }
+    }
+
+    submitPinButton.addEventListener('click', () => {
+      const pin = debuggerPinInput.value.trim();
+      pinErrorMessage.textContent = '';
+
+      if (pin === PASSWORD) {
+        pinEntrySection.style.display = 'none';
+        statusDisplaySection.style.display = 'block';
+        initBatteryMonitoring();
+      } else {
+        pinErrorMessage.textContent = 'Incorrect password.';
+      }
+    });
+  </script>
+</body>
+</html>

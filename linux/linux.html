@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS Style Launcher</title>
+    <link rel="icon" href="https://web.dev/static/articles/building/an-adaptive-favicon/image/example-light-theme-favic-d92b9def036e6.png" type="image/png">
+    <!-- Bootstrap CSS for basic styling and layout utilities -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Font Awesome for icons (battery, search, bolt, etc.) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts for specific typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Base styles for the body and full-screen overlays */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            height: 100vh;
+            /* Default background wallpaper */
+            background: url('https://wallpapers-clan.com/wp-content/uploads/2025/07/cityscape-tokyo-rainy-neon-desktop-wallpaper-preview.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            overflow: hidden; /* Prevent scrolling */
+            position: relative;
+            transition: background-image 0.5s ease-in-out; /* Smooth wallpaper transition */
+        }
+
+        /* Subtle overlay for initial desktop feel */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
+            pointer-events: none; /* Allows clicks to pass through */
+            z-index: 1;
+        }
+
+        /* Vignette effect for a more polished look */
+        .vignette-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 80%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Reusable base styles for modals and menus (overlays the entire screen) */
+        .overlay-base {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex; /* Centers content */
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+            backdrop-filter: blur(10px); /* Blurs content behind */
+            -webkit-backdrop-filter: blur(10px); /* For Safari */
+            z-index: 3000; /* Ensures it's above most content */
+            display: none; /* Hidden by default */
+        }
+
+        /* Specific style for the search modal's overlay */
+        .search-modal-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 5000; /* Highest z-index for search modal */
+        }
+
+        /* Reusable base styles for modal/menu content boxes */
+        .modal-menu-base {
+            background: rgba(40, 40, 40, 0.95); /* Semi-transparent dark background */
+            backdrop-filter: blur(15px); /* Strong blur for the box itself */
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); /* Soft shadow */
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+            position: relative;
+        }
+
+        /* Styles for context menus (desktop, app, top bar app) and user menu */
+        .context-menu, .user-menu, .app-context-menu, .topbar-app-context-menu {
+            background: rgba(50, 50, 50, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            padding: 5px 0;
+            min-width: 150px;
+            display: none; /* Hidden by default */
+            position: absolute; /* Positioned relative to mouse click */
+        }
+
+        /* Specific styles for the main search modal box */
+        .search-modal {
+            border-radius: 18px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            padding: 25px;
+            width: 90%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Dock position submenu, nested within the user-menu */
+        .dock-position-menu {
+            background: rgba(50, 50, 50, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            padding: 5px 0;
+            min-width: 180px;
+            position: absolute; /* Positioned relative to its parent menu item */
+            left: 100%; /* Appears to the right of "Dock Orientation" */
+            top: 0;
+            margin-left: 10px;
+            display: none;
+            z-index: 2001; /* Higher than user-menu to ensure it's on top */
+        }
+
+        /* Reusable styles for individual menu items */
+        .menu-item-base {
+            padding: 8px 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+        }
+        .menu-item-base:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Top Bar styling */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 22px;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 0 12px;
+            font-size: 12px;
+            user-select: none;
+            color: white;
+            z-index: 10;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .topbar-tux-icon {
+            height: 16px;
+            width: auto;
+            filter: drop-shadow(0 0 1px black); /* Adds a slight shadow for contrast */
+        }
+
+        .battery-status-text {
+            font-size: 0.75rem;
+        }
+
+        .battery-container {
+            position: relative;
+        }
+
+        /* Charging indicator (lightning bolt) */
+        .charging-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centers the lightning bolt over the battery icon */
+            font-size: 0.7em;
+            color: #4CAF50; /* Green color for charging */
+        }
+
+        .topbar-app-icon {
+            height: 16px;
+            width: 16px;
+            border-radius: 4px;
+            margin-left: 5px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .topbar-app-icon:hover {
+            transform: scale(1.1);
+        }
+
+
+        /* Dock Styling */
+        .dock {
+            position: fixed;
+            bottom: 8px; /* Default: horizontal at bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            height: 64px;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 0 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            user-select: none;
+            z-index: 10;
+            transition: all 0.3s ease-in-out; /* Smooth transitions for dock movement */
+            display: flex; /* Default: horizontal layout */
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Vertical Dock Specific Styles (Left) */
+        .dock.vertical-left {
+            left: 8px;
+            bottom: 50%;
+            transform: translateY(50%); /* Centers vertically */
+            height: auto;
+            width: 64px;
+            flex-direction: column; /* Vertical layout */
+            padding: 24px 0;
+            border-radius: 20px;
+        }
+
+        /* Vertical Dock Specific Styles (Right) */
+        .dock.vertical-right {
+            right: 8px;
+            bottom: 50%;
+            transform: translateY(50%);
+            left: auto; /* Override left:50% from default */
+            height: auto;
+            width: 64px;
+            flex-direction: column;
+            padding: 24px 0;
+            border-radius: 20px;
+        }
+
+        .dock-item {
+            position: relative;
+            padding-bottom: 5px; /* Space for the running indicator */
+        }
+
+        .dock-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            transition: transform 0.2s ease-out, filter 0.2s ease-out;
+            cursor: pointer;
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.6));
+            transform-origin: bottom center; /* For magnification effect */
+        }
+
+        /* Magnification classes for dock icons */
+        .dock-icon.magnified-large {
+            transform: scale(1.5) translateY(-15px);
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.9));
+        }
+        .dock.vertical-left .dock-icon.magnified-large,
+        .dock.vertical-right .dock-icon.magnified-large {
+            transform: scale(1.5) translateX(15px); /* Adjust for vertical dock */
+        }
+        .dock-icon.magnified-medium {
+            transform: scale(1.2) translateY(-5px);
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }
+        .dock.vertical-left .dock-icon.magnified-medium,
+        .dock.vertical-right .dock-icon.magnified-medium {
+            transform: scale(1.2) translateX(5px); /* Adjust for vertical dock */
+        }
+
+        /* Tooltip for app names on hover */
+        .app-name-tooltip {
+            position: absolute;
+            bottom: 60px; /* Position above the icon */
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0; /* Hidden by default */
+            pointer-events: none; /* Allows clicks to pass through when hidden */
+            transition: opacity 0.2s ease, transform 0.2s ease, bottom 0.2s ease, left 0.2s ease;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px); /* Starts slightly below and fades/moves up */
+        }
+
+        /* Tooltip positioning for vertical docks */
+        .dock.vertical-left .app-name-tooltip {
+            left: 70px;
+            bottom: auto;
+            top: 50%;
+            transform: translateY(-50%) translateX(5px);
+        }
+        .dock.vertical-right .app-name-tooltip {
+            right: 70px;
+            left: auto;
+            bottom: auto;
+            top: 50%;
+            transform: translateY(-50%) translateX(-5px);
+        }
+
+        .dock-item:hover .app-name-tooltip {
+            opacity: 1;
+            transform: translateY(0); /* Moves to original position and becomes visible */
+        }
+        .dock.vertical-left .dock-item:hover .app-name-tooltip,
+        .dock.vertical-right .dock-item:hover .app-name-tooltip {
+            transform: translateY(-50%) translateX(0);
+        }
+
+        /* Running indicator (the small dot under open apps) */
+        .running-indicator {
+            position: absolute;
+            bottom: 0; /* Position at the bottom of the dock item */
+            left: 50%; /* Center horizontally */
+            transform: translateX(-50%); /* Adjust for exact centering */
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: white;
+            box-shadow: 0 0 5px 1px rgba(255, 255, 255, 0.7);
+            display: none; /* Hidden by default */
+        }
+        .dock.vertical-left .running-indicator,
+        .dock.vertical-right .running-indicator {
+            left: 50%;
+            bottom: auto;
+            transform: translateX(-50%);
+            top: 55px; /* Adjusted top for vertical dock */
+        }
+
+        /* Separator in the dock */
+        .dock-separator {
+            width: 1px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin: 0 10px;
+            border-radius: 0.5px;
+        }
+        .dock.vertical-left .dock-separator,
+        .dock.vertical-right .dock-separator {
+            width: 40px;
+            height: 1px;
+            margin: 10px 0;
+        }
+
+        /* Bounce Animation for Dock Icons */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            20% { transform: translateY(-10px); }
+            40% { transform: translateY(0); }
+            60% { transform: translateY(-5px); }
+            80% { transform: translateY(0); }
+        }
+
+        .dock-icon.bounce-animation {
+            animation: bounce 0.6s ease-out;
+        }
+
+
+        /* Message Box Styling */
+        .message-box {
+            padding: 20px;
+            max-width: 400px;
+            text-align: center;
+        }
+        .message-box h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .message-box p {
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #007aff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 15px auto;
+            display: none; /* Hidden by default, shown by JS */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Datetime Display (middle of the screen) */
+        .center-datetime {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Google Sans Code', monospace;
+            font-weight: 600;
+            line-height: 1.2;
+            color: white;
+            text-shadow: 0 0 8px rgba(0,0,0,0.8);
+            z-index: 5;
+            padding: 15px 30px;
+            border-radius: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        .time-display {
+            font-size: 50px;
+            display: block;
+        }
+        .date-display {
+            font-size: 20px;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* Wallpaper Change Modal */
+        .wallpaper-modal {
+            padding: 25px;
+            max-width: 700px; /* Increased max-width to accommodate wallpaper previews */
+            width: 90%;
+            text-align: center;
+        }
+        .wallpaper-modal h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .wallpaper-modal input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+            outline: none;
+        }
+        .wallpaper-modal input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .wallpaper-modal .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Wallpaper Options Grid */
+        .wallpaper-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow-y: auto;
+            max-height: 250px; /* Make it scrollable if many options */
+        }
+
+        .wallpaper-option-item {
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            position: relative;
+            aspect-ratio: 16 / 9; /* Maintain aspect ratio */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wallpaper-option-item:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .wallpaper-option-item.selected {
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.5);
+        }
+
+        .wallpaper-option-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px; /* Slightly smaller border-radius than parent */
+        }
+        .wallpaper-option-item span {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 3px 5px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* User Menu Styling */
+        .user-menu {
+            right: 12px; /* Positioned relative to top right of screen */
+            top: 25px;
+            z-index: 2000;
+        }
+        .user-menu-item img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        /* Search Modal Specific Styles */
+        .search-input-container {
+            position: relative;
+            width: 100%;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 12px 12px 40px; /* Padding for the search icon */
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+        .search-input:focus {
+            border-color: #007aff;
+            background-color: rgba(0, 122, 255, 0.15);
+        }
+        .search-input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1rem;
+        }
+        .app-list-container {
+            max-height: 300px; /* Scrollable list of apps */
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .app-list-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .app-list-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .app-list-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        .app-list-item span {
+            flex-grow: 1;
+        }
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+
+        /* Settings Modal Specific Styles */
+        .settings-modal {
+            padding: 25px;
+            max-width: 800px; /* Wider to accommodate app list */
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Spacing between sections */
+            text-align: left; /* Align content to the left */
+        }
+
+        .settings-section h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-section .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid for options */
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .settings-option-button {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            text-align: center;
+        }
+        .settings-option-button:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .settings-option-button.selected {
+            background-color: #007bff;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+        }
+
+        .settings-app-list {
+            max-height: 350px; /* Scrollable app list */
+            overflow-y: auto;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .settings-app-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.05);
+            transition: background-color 0.15s ease;
+        }
+        .settings-app-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .settings-app-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        .settings-app-item span {
+            flex-grow: 1;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .settings-app-item .app-dock-toggle-button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .settings-app-item .app-dock-toggle-button.add {
+            background-color: #28a745; /* Green for Add */
+            color: white;
+        }
+        .settings-app-item .app-dock-toggle-button.remove {
+            background-color: #dc3545; /* Red for Remove */
+            color: white;
+        }
+        .settings-app-item .app-dock-toggle-button:hover {
+            opacity: 0.9;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="vignette-overlay"></div>
+
+    <!-- Top Bar -->
+    <div id="topbar" class="topbar d-flex justify-content-between align-items-center">
+        <div class="topbar-left d-flex align-items-center gap-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/640px-Tux.svg.png" alt="Tux Logo" class="topbar-tux-icon">
+            <!-- Container for running app icons in the top bar -->
+            <div id="running-apps-topbar-container" class="d-flex align-items-center gap-1"></div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- Battery Status Display -->
+            <span id="battery-status" class="d-flex align-items-center gap-1">
+                <span id="battery-text" class="battery-status-text"></span>
+                <span class="battery-container">
+                    <span id="battery-icon"></span>
+                    <span id="charging-indicator"></span>
+                </span>
+            </span>
+            <span id="user-profile-text" class="cursor-pointer">👤Sid</span>
+        </div>
+    </div>
+
+    <!-- User Menu -->
+    <div id="user-menu" class="user-menu modal-menu-base">
+        <!-- Account picture updated to favicon -->
+        <div class="user-menu-item menu-item-base d-flex align-items-center gap-2">
+            <img src="https://web.dev/static/articles/building/an-adaptive-favicon/image/example-light-theme-favic-d92b9def036e6.png" alt="Profile Picture" class="rounded-circle">
+            <span>Sid Ag</span>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="user-menu-item menu-item-base" id="user-menu-editor-mode">Editor Mode</div>
+        <!-- Dock Orientation removed from here, now in Settings App -->
+        <div class="dropdown-divider"></div>
+        <div class="user-menu-item menu-item-base" id="user-menu-logout">Logout</div>
+    </div>
+
+    <!-- Main Content Area (for datetime display) -->
+    <div class="content">
+        <span id="datetime-display" class="center-datetime text-center">
+            <span class="time-display" id="time-part"></span>
+            <span class="date-display mt-1" id="date-part"></span>
+        </span>
+    </div>
+
+    <!-- Desktop Context Menu (right-click on desktop) -->
+    <div id="context-menu" class="context-menu modal-menu-base">
+        <div class="context-menu-item menu-item-base" id="context-change-wallpaper">Change Wallpaper</div>
+        <div class="context-menu-item menu-item-base" id="context-reload-page">Reload Page</div>
+    </div>
+
+    <!-- Wallpaper Change Modal -->
+    <div id="wallpaper-modal-overlay" class="wallpaper-modal-overlay overlay-base">
+        <div class="wallpaper-modal modal-menu-base">
+            <h3 class="mb-4">Change Wallpaper</h3>
+            <!-- Wallpaper Options Grid -->
+            <div id="wallpaper-options-grid" class="wallpaper-options-grid">
+                <!-- Wallpaper option items will be injected here by JavaScript -->
+            </div>
+            <input type="text" id="wallpaper-url-input" class="form-control mb-3" placeholder="Enter custom image URL">
+            <div class="button-group d-flex justify-content-end gap-2">
+                <button class="btn btn-secondary" id="wallpaper-cancel-button">Cancel</button>
+                <button class="btn btn-primary" id="wallpaper-apply-button">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div id="search-modal-overlay" class="search-modal-overlay overlay-base">
+        <div id="search-modal" class="search-modal modal-menu-base">
+            <div class="search-input-container">
+                <i class="fas fa-search search-input-icon"></i>
+                <input type="text" id="search-app-input" class="search-input form-control" placeholder="Search for apps...">
+            </div>
+            <div id="app-list-container" class="app-list-container"></div>
+        </div>
+    </div>
+
+    <!-- New Settings Modal -->
+    <div id="settings-modal-overlay" class="settings-modal-overlay overlay-base">
+        <div id="settings-modal" class="settings-modal modal-menu-base">
+            <h3 class="mb-2">System Settings</h3>
+
+            <div class="settings-section">
+                <h4>Dock Orientation</h4>
+                <div id="settings-dock-orientation-options" class="options-grid">
+                    <!-- Dock orientation buttons injected here by JS -->
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4>Manage Dock Apps</h4>
+                <div id="settings-app-list" class="settings-app-list">
+                    <!-- App list with add/remove buttons injected here by JS -->
+                </div>
+            </div>
+
+            <div class="button-group d-flex justify-content-end gap-2 mt-auto">
+                <button class="btn btn-secondary" id="settings-close-button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Context Menu (right-click on dock item or search result) -->
+    <div id="app-context-menu" class="app-context-menu modal-menu-base">
+        <div class="app-context-menu-item menu-item-base" id="toggle-dock-status"></div>
+    </div>
+
+    <!-- Top Bar App Context Menu (right-click on running app icon in top bar) -->
+    <div id="topbar-app-context-menu" class="topbar-app-context-menu modal-menu-base">
+        <div class="topbar-app-context-menu-item menu-item-base" id="terminate-app-button">Terminate App</div>
+    </div>
+
+    <!-- Message Box Container (for showMessageBox function) -->
+    <div id="message-box-container"></div>
+
+    <!-- Main Dock -->
+    <div class="dock d-flex align-items-center" id="main-dock"></div>
+
+    <!-- Bootstrap JS Bundle (must be at the end of body for performance) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+        // --- Helper functions for DOM element selection ---
+        const D = id => document.getElementById(id);
+        const Q = sel => document.querySelector(sel);
+        const QA = sel => document.querySelectorAll(sel);
+
+        // --- Cached DOM elements for efficient access ---
+        const elements = {
+            messageBoxContainer: D('message-box-container'),
+            timePart: D('time-part'),
+            datePart: D('date-part'),
+            dock: D('main-dock'),
+            desktop: document.body,
+            contextMenu: D('context-menu'),
+            contextChangeWallpaper: D('context-change-wallpaper'),
+            contextReloadPage: D('context-reload-page'),
+            wallpaperModalOverlay: D('wallpaper-modal-overlay'),
+            wallpaperUrlInput: D('wallpaper-url-input'),
+            wallpaperApplyButton: D('wallpaper-apply-button'),
+            wallpaperCancelButton: D('wallpaper-cancel-button'),
+            wallpaperOptionsGrid: D('wallpaper-options-grid'),
+            userProfileText: D('user-profile-text'),
+            userMenu: D('user-menu'),
+            userMenuEditorMode: D('user-menu-editor-mode'),
+            userMenuLogout: D('user-menu-logout'),
+            searchModalOverlay: D('search-modal-overlay'),
+            searchModal: D('search-modal'),
+            searchAppInput: D('search-app-input'),
+            appListContainer: D('app-list-container'),
+            appContextMenu: D('app-context-menu'),
+            toggleDockStatusButton: D('toggle-dock-status'),
+            runningAppsTopbarContainer: D('running-apps-topbar-container'),
+            topbarAppContextMenu: D('topbar-app-context-menu'),
+            terminateAppButton: D('terminate-app-button'),
+            batteryText: D('battery-text'),
+            batteryIcon: D('battery-icon'),
+            chargingIndicator: D('charging-indicator'),
+            topbar: D('topbar'),
+            settingsModalOverlay: D('settings-modal-overlay'),
+            settingsModal: D('settings-modal'),
+            settingsDockOrientationOptions: D('settings-dock-orientation-options'),
+            settingsAppList: D('settings-app-list'),
+            settingsCloseButton: D('settings-close-button'),
+        };
+
+        let currentAppIdForContextMenu = null;
+        const BACKEND_URL = 'http://localhost:5000';
+        let runningAppsList = [];
+
+        const ALL_AVAILABLE_APPS = [
+            { id: 'search', name: 'Search', icon: 'https://icon-library.com/images/app-icon-search/app-icon-search-8.jpg', backend: false },
+            { id: 'gedit', name: 'TextEdit', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Notepad_Win11.svg/1200px-Notepad_Win11.svg.png', backend: true, endpoint: '/open-app/gedit' },
+            { id: 'firefox', name: 'Firefox', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Firefox_logo%2C_2019.svg/2048px-Firefox_logo%2C_2019.svg.png', backend: true, endpoint: '/open-app/firefox' },
+            { id: 'thunar', name: 'Files', icon: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Files_App_icon_iOS.png', backend: true, endpoint: '/open-app/thunar' },
+            { id: 'spotify', name: 'Spotify', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1200px-Spotify_logo%2C_2019.svg.png', backend: true, endpoint: '/open-app/spotify' },
+            { id: 'thunderbird', name: 'Thunderbird', icon: 'https://blog.thunderbird.net/files/2023/05/1024x1024@2x.png', backend: true, endpoint: '/open-app/thunderbird' },
+            { id: 'code', name: 'VS Code', icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/2048px-Visual_Studio_Code_1.35_icon.svg.png', backend: true, endpoint: '/open-app/code' },
+            { id: 'mousepad', name: 'Mousepad', icon: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRFV4hQyfG9RTbNTnZilqCSPKK0sA05RoYSw&s', backend: true, endpoint: '/open-app/mousepad' },
+            { id: 'ubuntu', name: 'Settings', icon: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Settings_%28iOS%29.png', backend: false }
+        ];
+
+        let dockedAppIds = JSON.parse(localStorage.getItem('dockedAppIds')) || ['search', 'gedit', 'firefox', 'thunar', 'spotify', 'thunderbird', 'code'];
+
+        const PREDEFINED_WALLPAPERS = [
+            { name: "Tokyo Cityscape", url: "https://wallpapers-clan.com/wp-content/uploads/2025/07/cityscape-tokyo-rainy-neon-desktop-wallpaper-preview.jpg" },
+            { name: "Cyberpunk Car", url: "https://wallpapers-clan.com/wp-content/uploads/2025/07/cyberpunk-car-synthwave-vibe-desktop-wallpaper-cover.jpg" },
+            { name: "Northern Lights", url: "https://wallpapers-clan.com/wp-content/uploads/2024/12/northern-lights-mountain-view-desktop-wallpaper-cover-768x432.jpg" },
+            { name: "Among Us Astronaut", url: "https://wallpapers-clan.com/wp-content/uploads/2025/06/among-us-art-pink-cosmic-astronaut-desktop-wallpaper-preview.jpg" }
+        ];
+
+        const closeAllMenusAndModals = (exceptionElement = null) => {
+            const targets = [
+                elements.contextMenu, elements.userMenu, elements.searchModalOverlay,
+                elements.appContextMenu, elements.topbarAppContextMenu, elements.wallpaperModalOverlay,
+                elements.settingsModalOverlay
+            ];
+            targets.forEach(el => { if (el && el !== exceptionElement) el.style.display = 'none'; });
+            if (elements.messageBoxContainer.firstChild && elements.messageBoxContainer.firstChild !== exceptionElement) {
+                elements.messageBoxContainer.innerHTML = '';
+            }
+        };
+
+        const showMessageBox = (title, message, isLoading = false, autoCloseDelay = 0) => {
+            elements.messageBoxContainer.innerHTML = '';
+            const overlay = document.createElement('div');
+            overlay.className = 'message-box-overlay overlay-base';
+            overlay.innerHTML = `
+                <div class="message-box modal-menu-base">
+                    <h3 class="mb-3">${title}</h3>
+                    ${isLoading ? '<div class="loading-spinner"></div>' : ''}
+                    <p class="mb-4">${message}</p>
+                    ${isLoading ? '' : '<button id="message-box-ok" class="btn btn-primary">OK</button>'}
+                </div>
+            `;
+            elements.messageBoxContainer.appendChild(overlay);
+
+            if (!isLoading) {
+                D('message-box-ok').addEventListener('click', () => elements.messageBoxContainer.removeChild(overlay));
+            }
+            if (autoCloseDelay > 0 && !isLoading) {
+                setTimeout(() => { if (elements.messageBoxContainer.contains(overlay)) elements.messageBoxContainer.removeChild(overlay); }, autoCloseDelay);
+            }
+        };
+
+        const launchApp = (endpoint, appName, iconElement = null) => {
+            closeAllMenusAndModals();
+            showMessageBox(`Launching ${appName}`, `Attempting to launch ${appName}...`, true);
+
+            if (iconElement) {
+                iconElement.classList.add('bounce-animation');
+                iconElement.addEventListener('animationend', () => {
+                    iconElement.classList.remove('bounce-animation');
+                }, { once: true });
+            }
+
+            fetch(`${BACKEND_URL}${endpoint}`)
+                .then(res => res.text())
+                .then(text => showMessageBox(`${appName} Status`, text, false, 3000))
+                .catch(err => showMessageBox(`${appName} Error`, 'Error: ' + err.message, false, 5000))
+                .finally(updateRunningApps);
+        };
+
+        const bringAppToFront = async (appId, appName, iconElement = null) => {
+            closeAllMenusAndModals();
+            showMessageBox(`Activating ${appName}`, `Bringing ${appName} to front...`, true);
+
+            if (iconElement) {
+                iconElement.classList.add('bounce-animation');
+                iconElement.addEventListener('animationend', () => {
+                    iconElement.classList.remove('bounce-animation');
+                }, { once: true });
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/bring-to-front/${appId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const resultText = await response.text();
+                showMessageBox('Activation Status', resultText, false, 3000);
+            } catch (error) {
+                showMessageBox('Activation Error', `Failed to activate ${appName}: ${error.message}`, false, 5000);
+            } finally {
+                updateRunningApps();
+            }
+        };
+
+        const updateDateTime = () => {
+            const now = new Date();
+            elements.timePart.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            elements.datePart.textContent = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        };
+
+        const updateBatteryStatus = battery => {
+            const level = Math.floor(battery.level * 100);
+            elements.batteryText.textContent = `${level}%`;
+
+            elements.chargingIndicator.className = battery.charging ? 'fas fa-bolt charging-indicator text-success' : '';
+
+            const iconMap = { 95: 'full', 75: 'three-quarters', 50: 'half', 25: 'quarter', 0: 'empty' };
+            let iconClass = 'fas fa-battery-empty text-danger';
+            for (const threshold in iconMap) {
+                if (level > parseInt(threshold)) {
+                    iconClass = `fas fa-battery-${iconMap[threshold]}`;
+                    if (battery.charging) {
+                        iconClass += ' text-success';
+                    } else if (level <= 25) {
+                        iconClass += ' text-danger';
+                    } else {
+                        iconClass += ' text-white';
+                    }
+                    break;
+                }
+            }
+            elements.batteryIcon.className = iconClass;
+        };
+
+        const updateRunningApps = async () => {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/running-apps`); // CORRECTED ENDPOINT
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const runningAppsData = await res.json();
+                runningAppsList = runningAppsData.running_apps || [];
+
+                QA('.dock-item').forEach(item => {
+                    const appId = item.getAttribute('data-app-id');
+                    const indicator = item.querySelector('.running-indicator');
+                    if (indicator) {
+                        const isBackendApp = ALL_AVAILABLE_APPS.some(app => app.id === appId && app.backend);
+                        if (isBackendApp && runningAppsList.includes(appId)) {
+                            indicator.style.display = 'block';
+                        } else {
+                            indicator.style.display = 'none';
+                        }
+                    }
+                });
+
+                elements.runningAppsTopbarContainer.innerHTML = '';
+                runningAppsList.forEach(appId => {
+                    const app = ALL_AVAILABLE_APPS.find(a => a.id === appId && a.backend);
+                    if (app) createTopBarAppIcon(app);
+                });
+
+            } catch (err) {
+                console.error('Error fetching running apps:', err);
+                QA('.dock-item .running-indicator').forEach(indicator => {
+                    if (indicator) indicator.style.display = 'none';
+                });
+                elements.runningAppsTopbarContainer.innerHTML = '';
+                runningAppsList = [];
+            }
+        };
+
+        const createTopBarAppIcon = app => {
+            const icon = document.createElement('img');
+            icon.src = app.icon;
+            icon.alt = app.name;
+            icon.className = 'topbar-app-icon rounded-1 ms-1';
+            icon.setAttribute('data-app-id', app.id);
+            icon.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                currentAppIdForContextMenu = app.id;
+                elements.terminateAppButton.textContent = `Terminate ${app.name}`;
+                elements.topbarAppContextMenu.style.display = 'block';
+                elements.topbarAppContextMenu.style.left = `${e.clientX}px`;
+                elements.topbarAppContextMenu.style.top = `${e.clientY}px`;
+                closeAllMenusAndModals(elements.topbarAppContextMenu);
+            });
+            elements.runningAppsTopbarContainer.appendChild(icon);
+        };
+
+        const populateAndFilterApps = (searchTerm = '') => {
+            elements.appListContainer.innerHTML = '';
+            const filteredApps = ALL_AVAILABLE_APPS.filter(app =>
+                app.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (filteredApps.length === 0) {
+                elements.appListContainer.innerHTML = '<div class="no-results p-4 text-center fst-italic text-white-70">No apps found.</div>';
+                return;
+            }
+
+            filteredApps.forEach(app => {
+                const item = document.createElement('div');
+                item.className = 'app-list-item d-flex align-items-center gap-3 py-2 px-3 rounded-2';
+                item.innerHTML = `
+                    <img src="${app.icon}" alt="${app.name}" class="dock-icon rounded-2">
+                    <span class="flex-grow-1">${app.name}</span>
+                `;
+
+                item.addEventListener('click', () => {
+                    const fullApp = ALL_AVAILABLE_APPS.find(a => a.id === app.id);
+                    const targetIcon = Q(`.dock-item[data-app-id="${app.id}"] .dock-icon`);
+                    if (fullApp?.backend) {
+                        if (runningAppsList.includes(fullApp.id)) {
+                            bringAppToFront(fullApp.id, fullApp.name, targetIcon);
+                        } else {
+                            launchApp(fullApp.endpoint, fullApp.name, targetIcon);
+                        }
+                    } else if (fullApp.id === 'ubuntu') {
+                        openSettingsModal();
+                    } else {
+                        showMessageBox('App Launch', `${app.name} clicked!`);
+                        elements.searchModalOverlay.style.display = 'none';
+                    }
+                });
+
+                item.addEventListener('contextmenu', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    currentAppIdForContextMenu = app.id;
+                    elements.toggleDockStatusButton.textContent = dockedAppIds.includes(app.id) ? 'Remove from Dock' : 'Add to Dock';
+                    elements.appContextMenu.style.display = 'block';
+                    elements.appContextMenu.style.left = `${e.clientX}px`;
+                    elements.appContextMenu.style.top = `${e.clientY}px`;
+                    closeAllMenusAndModals(elements.appContextMenu);
+                });
+
+                elements.appListContainer.appendChild(item);
+            });
+        };
+
+        const setDockOrientation = orientation => {
+            elements.dock.classList.remove('vertical-left', 'vertical-right', 'horizontal', 'flex-column');
+            elements.dock.classList.add('d-flex', 'align-items-center');
+
+            Object.assign(elements.dock.style, {
+                left: 'auto', right: 'auto', bottom: 'auto', top: 'auto',
+                transform: 'none', width: 'auto', height: 'auto', padding: '0', gap: '20px'
+            });
+
+            if (orientation === 'horizontal-bottom') {
+                elements.dock.classList.add('horizontal');
+                Object.assign(elements.dock.style, {
+                    bottom: '8px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    height: '64px',
+                    padding: '0 24px',
+                    flexDirection: 'row',
+                });
+            } else if (orientation === 'vertical-left') {
+                elements.dock.classList.add('vertical-left', 'flex-column');
+                Object.assign(elements.dock.style, {
+                    left: '8px',
+                    bottom: '50%',
+                    transform: 'translateY(50%)',
+                    width: '64px',
+                    padding: '24px 0',
+                    flexDirection: 'column',
+                });
+            } else if (orientation === 'vertical-right') {
+                elements.dock.classList.add('vertical-right', 'flex-column');
+                Object.assign(elements.dock.style, {
+                    right: '8px',
+                    bottom: '50%',
+                    transform: 'translateY(50%)',
+                    width: '64px',
+                    padding: '24px 0',
+                    flexDirection: 'column',
+                });
+            }
+            localStorage.setItem('dockOrientation', orientation);
+            if (elements.settingsModalOverlay.style.display === 'flex') {
+                updateDockOrientationSelection(orientation);
+            }
+        };
+
+        const createDockItem = app => {
+            const dockItem = document.createElement('div');
+            dockItem.className = 'dock-item';
+            dockItem.setAttribute('data-app-name', app.id);
+            dockItem.setAttribute('data-app-id', app.id);
+
+            const img = document.createElement('img');
+            img.src = app.icon;
+            img.alt = app.name;
+            img.className = 'dock-icon';
+            dockItem.appendChild(img);
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'app-name-tooltip';
+            tooltip.textContent = app.name;
+            dockItem.appendChild(tooltip);
+
+            const indicator = document.createElement('div');
+            indicator.className = 'running-indicator';
+            dockItem.appendChild(indicator);
+
+            dockItem.addEventListener('mouseenter', () => img.classList.add('magnified-large'));
+            dockItem.addEventListener('mouseleave', () => {
+                img.classList.remove('magnified-large', 'magnified-medium');
+                QA('.dock-icon').forEach(otherIcon => {
+                    if (otherIcon !== img) {
+                        otherIcon.style.transform = 'scale(1)';
+                    }
+                });
+            });
+
+            dockItem.addEventListener('mousemove', e => {
+                const rect = dockItem.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const distanceFromCenter = Math.abs(e.clientX - centerX);
+                const maxDistance = rect.width * 1.5;
+
+                QA('.dock-icon').forEach(otherIcon => {
+                    if (otherIcon === img) return;
+
+                    const otherRect = otherIcon.getBoundingClientRect();
+                    const otherCenterX = otherRect.left + otherRect.width / 2;
+                    const otherDistance = Math.abs(e.clientX - otherCenterX);
+                    
+                    if (otherDistance < maxDistance) {
+                        const scale = 1 - (otherDistance / maxDistance) * 0.3;
+                        otherIcon.style.transform = `scale(${scale})`;
+                    } else {
+                        otherIcon.style.transform = 'scale(1)';
+                    }
+                });
+            });
+
+
+            dockItem.addEventListener('click', () => {
+                const fullApp = ALL_AVAILABLE_APPS.find(a => a.id === app.id);
+                if (fullApp?.backend) {
+                    if (runningAppsList.includes(fullApp.id)) {
+                        bringAppToFront(fullApp.id, fullApp.name, img);
+                    } else {
+                        launchApp(fullApp.endpoint, fullApp.name, img);
+                    }
+                } else if (app.id === 'search') {
+                    closeAllMenusAndModals();
+                    elements.searchModalOverlay.style.display = 'flex';
+                    elements.searchAppInput.value = '';
+                    elements.searchAppInput.focus();
+                    populateAndFilterApps();
+                } else if (app.id === 'ubuntu') {
+                    openSettingsModal();
+                } else {
+                    showMessageBox('App Launch', `${app.name} clicked!`);
+                }
+            });
+
+            dockItem.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                currentAppIdForContextMenu = app.id;
+                elements.toggleDockStatusButton.textContent = dockedAppIds.includes(app.id) ? 'Remove from Dock' : 'Add to Dock';
+                elements.appContextMenu.style.display = 'block';
+                elements.appContextMenu.style.left = `${e.clientX}px`;
+                elements.appContextMenu.style.top = `${e.clientY}px`;
+                closeAllMenusAndModals(elements.appContextMenu);
+            });
+
+            elements.dock.appendChild(dockItem);
+        };
+
+        const renderDock = () => {
+            elements.dock.innerHTML = '';
+            const dockedApps = ALL_AVAILABLE_APPS.filter(app => dockedAppIds.includes(app.id));
+            dockedApps.forEach(createDockItem);
+
+            const separator = document.createElement('div');
+            separator.className = 'dock-separator';
+            elements.dock.appendChild(separator);
+
+            updateRunningApps();
+        };
+
+        const setWallpaper = (url) => {
+            elements.desktop.style.backgroundImage = `url('${url}')`;
+            localStorage.setItem('wallpaper', url);
+        };
+
+        const populateWallpaperOptions = () => {
+            elements.wallpaperOptionsGrid.innerHTML = '';
+            PREDEFINED_WALLPAPERS.forEach(wallpaper => {
+                const item = document.createElement('div');
+                item.className = 'wallpaper-option-item';
+                item.setAttribute('data-url', wallpaper.url);
+                item.innerHTML = `
+                    <img src="${wallpaper.url}" alt="${wallpaper.name} Thumbnail">
+                    <span>${wallpaper.name}</span>
+                `;
+
+                item.addEventListener('click', () => {
+                    QA('.wallpaper-option-item').forEach(opt => opt.classList.remove('selected'));
+                    item.classList.add('selected');
+                    elements.wallpaperUrlInput.value = wallpaper.url;
+                });
+                elements.wallpaperOptionsGrid.appendChild(item);
+            });
+
+            const currentWallpaperUrl = localStorage.getItem('wallpaper') || 'https://wallpapers-clan.com/wp-content/uploads/2025/07/cityscape-tokyo-rainy-neon-desktop-wallpaper-preview.jpg';
+            const selectedOption = Q(`.wallpaper-option-item[data-url="${currentWallpaperUrl}"]`);
+            if (selectedOption) {
+                selectedOption.classList.add('selected');
+            }
+            elements.wallpaperUrlInput.value = currentWallpaperUrl;
+        };
+
+        const openSettingsModal = () => {
+            closeAllMenusAndModals();
+            elements.settingsModalOverlay.style.display = 'flex';
+            populateSettingsContent();
+        };
+
+        const populateSettingsContent = () => {
+            elements.settingsDockOrientationOptions.innerHTML = '';
+            const dockOrientations = [
+                { id: 'horizontal-bottom', name: 'Horizontal (Bottom)' },
+                { id: 'vertical-left', name: 'Vertical (Left)' },
+                { id: 'vertical-right', name: 'Vertical (Right)' }
+            ];
+            const currentOrientation = localStorage.getItem('dockOrientation') || 'horizontal-bottom';
+
+            dockOrientations.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'settings-option-button';
+                if (option.id === currentOrientation) {
+                    button.classList.add('selected');
+                }
+                button.textContent = option.name;
+                button.addEventListener('click', () => {
+                    setDockOrientation(option.id);
+                    updateDockOrientationSelection(option.id);
+                });
+                elements.settingsDockOrientationOptions.appendChild(button);
+            });
+
+            elements.settingsAppList.innerHTML = '';
+            ALL_AVAILABLE_APPS.forEach(app => {
+                if (app.id === 'ubuntu') return;
+
+                const appItem = document.createElement('div');
+                appItem.className = 'settings-app-item';
+                appItem.innerHTML = `
+                    <img src="${app.icon}" alt="${app.name}" style="width: 32px; height: 32px; border-radius: 8px;">
+                    <span>${app.name}</span>
+                    <button class="app-dock-toggle-button" data-app-id="${app.id}">
+                        ${dockedAppIds.includes(app.id) ? 'Remove from Dock' : 'Add to Dock'}
+                    </button>
+                `;
+                const toggleButton = appItem.querySelector('.app-dock-toggle-button');
+                if (dockedAppIds.includes(app.id)) {
+                    toggleButton.classList.add('remove');
+                } else {
+                    toggleButton.classList.add('add');
+                }
+
+                toggleButton.addEventListener('click', () => {
+                    const appId = toggleButton.getAttribute('data-app-id');
+                    const index = dockedAppIds.indexOf(appId);
+                    if (index > -1) {
+                        dockedAppIds.splice(index, 1);
+                        toggleButton.textContent = 'Add to Dock';
+                        toggleButton.classList.remove('remove');
+                        toggleButton.classList.add('add');
+                    } else {
+                        dockedAppIds.push(appId);
+                        toggleButton.textContent = 'Remove from Dock';
+                        toggleButton.classList.remove('add');
+                        toggleButton.classList.add('remove');
+                    }
+                    localStorage.setItem('dockedAppIds', JSON.stringify(dockedAppIds));
+                    renderDock();
+                });
+                elements.settingsAppList.appendChild(appItem);
+            });
+        };
+
+        const updateDockOrientationSelection = (selectedId) => {
+            QA('#settings-dock-orientation-options .settings-option-button').forEach(button => {
+                if (button.textContent.toLowerCase().includes(selectedId.split('-').join(' ').toLowerCase())) {
+                    button.classList.add('selected');
+                } else {
+                    button.classList.remove('selected');
+                }
+            });
+        };
+
+        const init = () => {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    updateBatteryStatus(battery);
+                    battery.addEventListener('levelchange', () => updateBatteryStatus(battery));
+                    battery.addEventListener('chargingchange', () => updateBatteryStatus(battery));
+                }).catch(error => {
+                    console.error("Failed to get battery information:", error);
+                    elements.batteryText.textContent = "N/A";
+                    elements.batteryIcon.className = "fas fa-battery-slash";
+                    elements.chargingIndicator.className = "";
+                });
+            } else {
+                elements.batteryText.textContent = "N/A";
+                elements.batteryIcon.className = "fas fa-battery-slash";
+                elements.chargingIndicator.className = "";
+                console.warn("Battery Status API is not supported in this browser.");
+            }
+
+            updateRunningApps();
+            setInterval(updateRunningApps, 5000);
+
+            const savedDockOrientation = localStorage.getItem('dockOrientation') || 'horizontal-bottom';
+            setDockOrientation(savedDockOrientation);
+            renderDock();
+
+            document.addEventListener('click', e => {
+                const clickedInsideContextMenu = elements.contextMenu.contains(e.target);
+                const clickedInsideUserMenu = elements.userMenu.contains(e.target);
+                const clickedInsideSearchModal = elements.searchModal.contains(e.target);
+                const clickedInsideAppContextMenu = elements.appContextMenu.contains(e.target);
+                const clickedInsideTopbarAppContextMenu = elements.topbarAppContextMenu.contains(e.target);
+                const clickedInsideWallpaperModal = elements.wallpaperModalOverlay.contains(e.target);
+                const clickedInsideSettingsModal = elements.settingsModal.contains(e.target);
+                const clickedOnUserProfileText = elements.userProfileText.contains(e.target);
+
+                if (!clickedInsideContextMenu && !clickedInsideUserMenu && !clickedInsideSearchModal &&
+                    !clickedInsideAppContextMenu && !clickedInsideTopbarAppContextMenu && !clickedInsideWallpaperModal &&
+                    !clickedInsideSettingsModal &&
+                    !clickedOnUserProfileText && !e.target.closest('.dock-item') && !e.target.closest('.topbar-app-icon')) {
+                    closeAllMenusAndModals();
+                }
+            });
+
+            elements.desktop.addEventListener('contextmenu', e => {
+                e.preventDefault();
+                closeAllMenusAndModals();
+                elements.contextMenu.style.display = 'block';
+                elements.contextMenu.style.left = `${e.clientX}px`;
+                elements.contextMenu.style.top = `${e.clientY}px`;
+            });
+
+            elements.userProfileText.addEventListener('click', e => {
+                e.stopPropagation();
+                closeAllMenusAndModals(elements.userMenu);
+                elements.userMenu.style.display = elements.userMenu.style.display === 'block' ? 'none' : 'block';
+            });
+
+            elements.userMenuLogout.addEventListener('click', () => {
+                closeAllMenusAndModals();
+                showMessageBox('Logging Out', 'Clearing preferences and logging out...', true, 0);
+                setTimeout(() => {
+                    localStorage.clear();
+                    location.reload();
+                }, 1000);
+            });
+
+            elements.contextChangeWallpaper.addEventListener('click', () => {
+                closeAllMenusAndModals();
+                elements.wallpaperModalOverlay.style.display = 'flex';
+                populateWallpaperOptions();
+            });
+            elements.wallpaperCancelButton.addEventListener('click', () => elements.wallpaperModalOverlay.style.display = 'none');
+            elements.wallpaperApplyButton.addEventListener('click', () => {
+                const url = elements.wallpaperUrlInput.value;
+                if (url) {
+                    setWallpaper(url);
+                    elements.wallpaperModalOverlay.style.display = 'none';
+                } else {
+                    showMessageBox('Error', 'Please enter a valid image URL or select an option.', false, 3000);
+                }
+            });
+            const savedWallpaper = localStorage.getItem('wallpaper');
+            if (savedWallpaper) {
+                setWallpaper(savedWallpaper);
+            }
+
+            elements.contextReloadPage.addEventListener('click', () => location.reload());
+
+            elements.searchAppInput.addEventListener('input', e => {
+                populateAndFilterApps(e.target.value);
+            });
+
+            elements.searchModalOverlay.addEventListener('click', e => {
+                if (e.target.id === 'search-modal-overlay') {
+                    closeAllMenusAndModals();
+                }
+            });
+
+            elements.settingsCloseButton.addEventListener('click', () => {
+                closeAllMenusAndModals();
+            });
+
+            elements.toggleDockStatusButton.addEventListener('click', () => {
+                if (currentAppIdForContextMenu) {
+                    const index = dockedAppIds.indexOf(currentAppIdForContextMenu);
+                    if (index > -1) {
+                        dockedAppIds.splice(index, 1);
+                    } else {
+                        dockedAppIds.push(currentAppIdForContextMenu);
+                    }
+                    localStorage.setItem('dockedAppIds', JSON.stringify(dockedAppIds));
+                    renderDock();
+                    closeAllMenusAndModals();
+                    if (elements.settingsModalOverlay.style.display === 'flex') {
+                        populateSettingsContent();
+                    }
+                }
+            });
+
+            elements.terminateAppButton.addEventListener('click', async () => {
+                if (currentAppIdForContextMenu) {
+                    closeAllMenusAndModals();
+                    showMessageBox(`Terminating ${currentAppIdForContextMenu}`, `Attempting to terminate ${currentAppIdForContextMenu}...`, true);
+                    try {
+                        const response = await fetch(`${BACKEND_URL}/api/terminate-app`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ app_name: currentAppIdForContextMenu })
+                        });
+                        const result = await response.json();
+                        showMessageBox('Termination Status', result.message || result.error, false, 3000);
+                    } catch (error) {
+                        showMessageBox('Termination Error', `Failed to terminate app: ${error.message}`, false, 5000);
+                    } finally {
+                        updateRunningApps();
+                    }
+                }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+

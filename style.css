@@ -1,0 +1,84 @@
+/* style.css */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #2F2E6F; /* Deep blue from the image */
+    color: #f3f4f6; /* Lighter text for contrast */
+}
+
+.skill-icon {
+    font-size: 4rem; /* Larger icons */
+    color: #6366f1; /* A lighter indigo blue for contrast with the new background */
+}
+
+/* Custom styles for the desktop navbar */
+.navbar-custom {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.2); /* Slightly visible white with blur */
+    border-radius: 9999px; /* Pill shape */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Light border for definition */
+}
+.navbar-link {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    color: #e0e7ff; /* Lighter text for navbar links */
+}
+.navbar-link:hover {
+    background-color: rgba(255, 255, 255, 0.4); /* Lighter hover for contrast */
+    color: #1f2937; /* Darker text on hover */
+}
+.navbar-email {
+    background-color: white;
+    color: #1f2937;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 500;
+}
+
+/* Adjust body padding for fixed top desktop navbar */
+@media (min-width: 1024px) {
+    body {
+        padding-top: 6rem; /* Adjust this value if the navbar height changes */
+    }
+}
+
+/* Custom styles for the mobile navbar */
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    color: #d1d5db; /* Light gray for inactive icons */
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 10;
+}
+.mobile-nav-item.active {
+    color: #1f2937; /* Darker text for active icon */
+}
+.mobile-nav-item.active svg {
+    color: #f3f4f6; /* White icon for active icon */
+}
+.mobile-nav-item .icon-bg {
+    position: absolute;
+    width: 44px; /* Slightly larger than icon */
+    height: 44px;
+    background-color: #f97316; /* Orange from your design */
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.3s ease;
+    z-index: 0;
+}
+.mobile-nav-item.active .icon-bg {
+    transform: scale(1);
+}
+.mobile-nav-item svg {
+    font-size: 1.5rem;
+    position: relative;
+    z-index: 50;
+}
+.mobile-nav-item span {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}

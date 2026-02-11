@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Collection</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f0f0f;
+      color: #e5e5e5;
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-6">
+  <h1 class="text-3xl font-bold mb-6 text-white">📚 Aarushi's Catalog</h1>
+
+  <!-- Search bar -->
+  <input
+    id="search"
+    type="text"
+    placeholder="Search by title or author..."
+    class="w-full max-w-md p-3 mb-8 rounded-lg bg-neutral-900 text-gray-200 border border-neutral-700 focus:outline-none focus:ring-5 focus:ring-blue-50"
+  />
+
+  <!-- Books grid -->
+  <div id="bookGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-6xl">
+    <!-- Cards inserted here dynamically -->
+  </div>
+
+  <script>
+    const SHEET_ID = "1ir9OfRL6KT3yXy9lNL4xWzvPLwByTqkC9lomhy2zeCo";
+    const SHEET_NAME = "Sheet1";
+    const API_URL = `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`;
+
+    const grid = document.getElementById('bookGrid');
+    const searchInput = document.getElementById('search');
+    let books = [];
+
+    // Fetch data from Google Sheets
+    async function fetchBooks() {
+      try {
+        const res = await fetch(API_URL);
+        books = await res.json();
+        renderBooks(books);
+      } catch (err) {
+        console.error("Error loading sheet:", err);
+        grid.innerHTML = `<p class="text-red-500">Failed to load books. Please check the Sheet URL.</p>`;
+      }
+    }
+
+    function renderBooks(data) {
+      grid.innerHTML = "";
+      data.forEach((book) => {
+        const title = book["Title"] || "Untitled";
+        const author = book["Author"] || "Unknown Author";
+        const notes = book["Notes"] || "";
+
+        const card = document.createElement("div");
+        card.className =
+          "p-4 bg-neutral-900 rounded-2xl shadow-md border border-neutral-800 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition";
+        card.innerHTML = `
+          <h2 class="text-lg font-semibold text-white mb-1">${title}</h2>
+          <p class="text-sm text-gray-400 mb-1">${author}</p>
+          ${notes ? `<p class="text-xs text-blue-400 italic">${notes}</p>` : ""}
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Filter as you type
+    searchInput.addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = books.filter(
+        (b) =>
+          (b["Title"] && b["Title"].toLowerCase().includes(q)) ||
+          (b["Author"] && b["Author"].toLowerCase().includes(q))
+      );
+      renderBooks(filtered);
+    });
+
+    fetchBooks();
+  </script>
+</body>
+</html>
