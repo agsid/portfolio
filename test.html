@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task OS | Secure Access</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #050505; color: #e5e5e5; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    .gantt-grid { display: grid; grid-template-columns: 220px 1fr; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .glass { background: rgba(23, 23, 23, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    input, select { background: #121212 !important; border: 1px solid #262626 !important; color: white !important; }
+    .hidden-view { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+
+  <div id="loginSection" class="w-full max-w-md p-8 glass rounded-3xl shadow-2xl text-center">
+    <div class="mb-6">
+      <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.5)]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-black tracking-tighter">AUTHENTICATION REQUIRED</h2>
+      <p class="text-neutral-500 text-sm">Enter access key to manage tasks</p>
+    </div>
+    
+    <input type="password" id="passkey" placeholder="••••••••" class="w-full p-4 rounded-xl mb-4 text-center tracking-[1em] focus:ring-2 focus:ring-blue-500 outline-none transition">
+    <button onclick="checkAuth()" class="w-full bg-white text-black font-bold p-4 rounded-xl hover:bg-blue-500 hover:text-white transition duration-300">UNLOCK SYSTEM</button>
+    <p id="loginError" class="text-red-500 text-xs mt-4 opacity-0">Invalid Passkey. Access Denied.</p>
+  </div>
+
+  <div id="mainSection" class="hidden-view w-full p-6 max-w-7xl mx-auto self-start">
+    <header class="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div>
+        <h1 class="text-3xl font-black text-white tracking-tighter uppercase">Cloud Gantt <span class="text-blue-600">v3.0</span></h1>
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <p class="text-neutral-500 text-[10px] font-mono uppercase tracking-widest">System Online | Secure Session</p>
+        </div>
+      </div>
+      
+      <form id="taskForm" class="flex flex-wrap gap-2 bg-neutral-900/50 p-3 rounded-xl border border-neutral-800 backdrop-blur-md">
+        <input type="text" id="taskName" placeholder="Task Name" class="px-3 py-2 rounded-lg text-sm w-40" required>
+        <select id="taskCat" class="px-3 py-2 rounded-lg text-sm">
+          <option value="Backend">Backend</option>
+          <option value="Design">Design</option>
+          <option value="QA">QA</option>
+        </select>
+        <input type="date" id="taskStart" class="px-3 py-2 rounded-lg text-sm" required>
+        <input type="date" id="taskEnd" class="px-3 py-2 rounded-lg text-sm" required>
+        <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Sync</button>
+      </form>
+    </header>
+
+    <div class="bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl">
+      <div class="gantt-grid border-b border-neutral-800 bg-neutral-800/30">
+        <div class="p-4 text-[10px] font-bold uppercase text-neutral-500 border-r border-neutral-800">Resource Matrix</div>
+        <div id="dateHeader" class="flex overflow-x-auto no-scrollbar"></div>
+      </div>
+      <div id="ganttBody" class="relative min-h-[500px]"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- CONFIGURATION ---
+    const SECRET_CODE = "1234"; // CHANGE THIS TO YOUR DESIRED PASSWORD
+    const READ_URL = "https://opensheet.elk.sh/11Ewk7kva0PqYLphyYKyIXz63uBwmDFp1Nks6qKfx_LQ/Sheet4";
+    const WRITE_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE"; 
+
+    // --- AUTH LOGIC ---
+    function checkAuth() {
+      const input = document.getElementById('passkey').value;
+      const error = document.getElementById('loginError');
+      
+      if(input === SECRET_CODE) {
+        document.getElementById('loginSection').classList.add('hidden-view');
+        document.getElementById('mainSection').classList.remove('hidden-view');
+        document.body.classList.remove('flex', 'items-center', 'justify-center');
+        loadData();
+      } else {
+        error.classList.remove('opacity-0');
+        setTimeout(() => error.classList.add('opacity-0'), 2000);
+      }
+    }
+
+    // --- GANTT LOGIC ---
+    let tasks = [];
+    const startTimeline = new Date("2026-03-01");
+    const totalDays = 31;
+
+    async function loadData() {
+      try {
+        const res = await fetch(READ_URL);
+        tasks = await res.json();
+        renderGantt();
+      } catch (e) { console.error("Fetch error", e); }
+    }
+
+    function renderGantt() {
+      const body = document.getElementById('ganttBody');
+      const header = document.getElementById('dateHeader');
+      
+      header.innerHTML = "";
+      for (let i = 0; i < totalDays; i++) {
+        const d = new Date(startTimeline);
+        d.setDate(startTimeline.getDate() + i);
+        header.innerHTML += `
+          <div class="flex-1 min-w-[50px] p-2 text-center border-r border-neutral-800/50 text-neutral-600">
+            <div class="text-[9px] uppercase font-bold">${d.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+            <div class="text-xs font-mono">${d.getDate()}</div>
+          </div>`;
+      }
+
+      body.innerHTML = "";
+      tasks.forEach(item => {
+        const tStart = new Date(item.start);
+        const tEnd = new Date(item.end);
+        if (isNaN(tStart)) return;
+
+        const startDiff = (tStart - startTimeline) / (1000 * 60 * 60 * 24);
+        const duration = ((tEnd - tStart) / (1000 * 60 * 60 * 24)) + 1;
+
+        const row = document.createElement('div');
+        row.className = "gantt-grid border-b border-neutral-800 group hover:bg-white/[0.02]";
+        row.innerHTML = `
+          <div class="p-4 border-r border-neutral-800">
+            <div class="text-sm font-semibold text-white truncate">${item.tasks}</div>
+            <div class="text-[9px] text-blue-500 font-mono uppercase tracking-tighter">${item.category}</div>
+          </div>
+          <div class="relative h-14 flex items-center">
+            <div class="absolute h-8 rounded-xl bg-blue-600/20 border border-blue-500/50 flex items-center px-4 text-[10px] font-bold text-blue-100 shadow-[0_0_15px_rgba(37,99,235,0.1)]"
+                 style="left: ${(startDiff/totalDays)*100}%; width: ${(duration/totalDays)*100}%;">
+              <span class="truncate">${item.tasks}</span>
+            </div>
+          </div>`;
+        body.appendChild(row);
+      });
+    }
+
+    // --- WRITE LOGIC ---
+    document.getElementById('taskForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const formData = {
+        tasks: document.getElementById('taskName').value,
+        category: document.getElementById('taskCat').value,
+        start: document.getElementById('taskStart').value,
+        end: document.getElementById('taskEnd').value
+      };
+
+      btn.innerText = "...";
+      try {
+        await fetch(WRITE_URL, { method: "POST", body: JSON.stringify(formData) });
+        setTimeout(() => { loadData(); btn.innerText = "Sync"; e.target.reset(); }, 1500);
+      } catch (err) { alert("Apps Script Error"); btn.innerText = "Err"; }
+    });
+  </script>
+</body>
+</html>
