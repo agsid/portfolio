@@ -1,186 +1,135 @@
 ---
-// Porsche 911 GT3 RS - Digital Twin Experience
-import '../styles/global.css'
+import '../styles/global.css';
 ---
 
-<html lang="en">
+<html lang="en" class="bg-[#050505] selection:bg-red-600">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>911 GT3 RS | Digital Twin</title>
-		<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;900&display=swap" rel="stylesheet">
+		<meta name="viewport" content="width=device-width" />
+		<title>911 GT3 RS | Engineering Precision</title>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet">
 	</head>
-	<body class="bg-[#050505] text-white font-['Inter'] m-0 p-0 overflow-x-hidden">
+	<body class="text-white font-['Inter'] antialiased">
+		
+		<div id="canvas-container" class="fixed top-0 left-0 w-full h-screen z-0"></div>
 
-		<div id="viewport-container" class="fixed top-0 left-0 w-full h-screen z-0 pointer-events-none">
-			<iframe 
-				id="porsche-iframe"
-				class="w-full h-full border-none"
-				src="https://sketchfab.com/models/e738eae819c34d19a31dd066c45e0f3d/embed?autostart=1&transparent=1&ui_controls=0&ui_infos=0&ui_watermark=0&ui_hint=0&ui_theme=dark"
-				allow="autoplay; fullscreen; xr-spatial-tracking"
-			></iframe>
-		</div>
-
-		<div class="fixed top-0 left-0 w-full h-full pointer-events-none z-10 bg-[radial-gradient(circle,transparent_30%,#000_150%)]"></div>
-
-		<nav class="fixed top-0 w-full z-50 p-8 flex justify-between items-center mix-blend-difference">
-			<div class="font-['Syncopate'] text-xs tracking-[0.3em]">
-				PORSCHE <span class="text-red-600">GT3 RS</span>
-			</div>
-			<div class="hidden md:flex gap-10 font-['Syncopate'] text-[9px] opacity-60">
-				<div class="flex flex-col">
-					<span>SYNC_STATUS</span>
-					<span class="text-red-600 uppercase" id="sync-text">Live</span>
-				</div>
-				<div class="flex flex-col">
-					<span>LOAD_INDEX</span>
-					<span class="text-red-600" id="load-val">00%</span>
-				</div>
-			</div>
-			<button class="bg-white/5 backdrop-blur-md border border-white/10 px-6 py-2 font-['Syncopate'] text-[9px] hover:bg-red-600 transition-colors pointer-events-auto">
-				RESERVE
-			</button>
-		</nav>
-
-		<main class="relative z-20 w-full">
+		<main class="relative z-10">
 			
-			<section class="h-screen flex items-center justify-center px-6">
-				<div class="text-center">
-					<h2 class="font-['Syncopate'] text-red-600 text-[10px] tracking-[1.2em] mb-4 opacity-0" id="hero-tag">AERODYNAMICS</h2>
-					<h1 class="font-['Syncopate'] text-5xl md:text-8xl leading-none mb-6">TYPE 992</h1>
-					<p class="text-[10px] font-['Syncopate'] tracking-[0.5em] opacity-40 animate-pulse">SCROLL TO ANALYZE</p>
-				</div>
+			<section class="h-[120vh] flex flex-col justify-center px-[10%] pointer-events-none">
+				<h1 id="hero-text" class="text-[15vw] font-black uppercase italic leading-[0.8] tracking-tighter">
+					911 <span class="text-red-600">GT3</span>
+				</h1>
+				<p class="mt-6 text-zinc-500 uppercase tracking-[0.5em] text-xs">Pushing the limits of physics</p>
 			</section>
 
-			<section class="h-screen flex items-center px-6 md:px-20">
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl">
-					<div class="bg-white/5 backdrop-blur-xl border border-white/10 p-10 reveal">
-						<span class="font-['Syncopate'] text-4xl text-red-600 block mb-2">525</span>
-						<label class="font-['Syncopate'] text-[9px] opacity-40 tracking-widest">HORSEPOWER</label>
-					</div>
-					<div class="bg-white/5 backdrop-blur-xl border border-white/10 p-10 reveal">
-						<span class="font-['Syncopate'] text-4xl text-red-600 block mb-2">3.2s</span>
-						<label class="font-['Syncopate'] text-[9px] opacity-40 tracking-widest">0-100 KM/H</label>
-					</div>
-					<div class="bg-white/5 backdrop-blur-xl border border-white/10 p-10 md:col-span-2 reveal">
-						<h3 class="font-['Syncopate'] text-sm mb-4 tracking-wider">DRS INTEGRATION</h3>
-						<p class="text-sm opacity-50 font-light leading-relaxed max-w-xl">
-							For the first time on a production Porsche, a Drag Reduction System (DRS) is fitted. This allows the wing to be flattened at the touch of a button.
-						</p>
-					</div>
-				</div>
-			</section>
-
-			<section class="h-screen flex items-center justify-end px-6 md:px-20">
-				<div class="bg-white/5 backdrop-blur-xl border border-white/10 p-10 max-w-sm reveal-right">
-					<div class="w-10 h-[1px] bg-red-600 mb-6"></div>
-					<h3 class="font-['Syncopate'] text-sm mb-4 tracking-wider">FLAT-SIX ENGINE</h3>
-					<p class="text-sm opacity-50 font-light leading-relaxed">
-						Naturally aspirated 4.0-liter engine. 9,000 rpm redline. A high-performance athlete built for the circuit.
+			<section class="h-screen flex items-center px-[10%] pointer-events-none">
+				<div class="max-w-md bg-black/40 backdrop-blur-md p-8 border-l-4 border-red-600">
+					<h2 class="text-4xl font-black uppercase mb-4 italic">Downforce</h2>
+					<p class="text-zinc-400 leading-relaxed uppercase text-sm tracking-widest">
+						Every curve is functional. The massive swan-neck rear wing provides up to 860kg of downforce.
 					</p>
 				</div>
 			</section>
 
-			<section class="h-screen flex items-center justify-center px-6">
-				<div class="bg-white/5 backdrop-blur-2xl border border-white/10 p-16 text-center max-w-2xl reveal">
-					<h2 class="font-['Syncopate'] text-xl mb-8 tracking-widest text-red-600">MISSION COMPLETE</h2>
-					<p class="text-[10px] font-['Syncopate'] tracking-[0.3em] opacity-40 mb-10">THE 911 GT3 RS DIGITAL TWIN IS READY.</p>
-					<button class="bg-red-600 text-white font-['Syncopate'] px-12 py-5 text-[10px] tracking-widest hover:bg-white hover:text-black transition-all duration-500">
-						LAUNCH CONFIGURATOR
-					</button>
+			<section class="h-screen flex items-center justify-end px-[10%] text-right pointer-events-none">
+				<div class="max-w-md bg-black/40 backdrop-blur-md p-8 border-r-4 border-red-600">
+					<h2 class="text-4xl font-black uppercase mb-4 italic">Heartbeat</h2>
+					<p class="text-zinc-400 leading-relaxed uppercase text-sm tracking-widest">
+						4.0-liter naturally aspirated boxer engine. 9,000 RPM. 518 Horsepower. 0-60 in 3.0s.
+					</p>
 				</div>
 			</section>
 
-			<div class="h-[100vh]"></div>
+			<section class="h-screen flex flex-col items-center justify-center pointer-events-auto">
+				<h2 class="text-6xl font-black uppercase mb-12 italic tracking-tighter text-center">Engineered for <br/> <span class="text-red-600">The Obsessed</span></h2>
+				<button class="px-16 py-6 bg-white text-black font-black uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all duration-500 transform hover:scale-110">
+					Configure Yours
+				</button>
+			</section>
+
 		</main>
 
-		<script is:inline src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
-		<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-		<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+		<script type="module">
+			import * as THREE from 'https://cdn.skypack.dev/three@0.150.0';
+			import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.150.0/examples/jsm/loaders/GLTFLoader.js';
+			import { gsap } from 'https://cdn.skypack.dev/gsap';
+			import { ScrollTrigger } from 'https://cdn.skypack.dev/gsap/ScrollTrigger';
 
-		<script is:inline>
 			gsap.registerPlugin(ScrollTrigger);
 
-			const iframe = document.getElementById('porsche-iframe');
-			const client = new Sketchfab(iframe);
-			let apiRef = null;
+			// 1. SCENE SETUP
+			const scene = new THREE.Scene();
+			const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 1000);
+			camera.position.set(0, 0, 15); // Start further back
 
-			// Init Sketchfab
-			client.init('e738eae819c34d19a31dd066c45e0f3d', {
-				success: (api) => {
-					api.start();
-					api.addEventListener('viewerready', () => {
-						apiRef = api;
-						setupCameraSync();
-						initUIAnims();
-					});
-				},
-				error: () => console.error('Sketchfab API error')
-			});
+			const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+			renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			renderer.toneMappingExposure = 1.2;
+			document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-			function setupCameraSync() {
-				ScrollTrigger.create({
-					trigger: "main",
-					start: "top top",
-					end: "bottom bottom",
-					scrub: 1.5,
-					onUpdate: (self) => {
-						if (!apiRef) return;
+			// 2. LIGHTING (Studio Setup)
+			const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+			scene.add(ambient);
 
-						// Rotation: 2 full circles over the scroll
-						const angle = self.progress * Math.PI * 4;
-						
-						// Zoom: Pull back from 6m to 16m
-						const radius = 6 + (self.progress * 10);
-						
-						// Vertical: Slight rise in camera height
-						const y = 1.2 + (self.progress * 3);
+			const topLight = new THREE.DirectionalLight(0xffffff, 2);
+			topLight.position.set(0, 10, 0);
+			scene.add(topLight);
 
-						const x = Math.sin(angle) * radius;
-						const z = Math.cos(angle) * radius;
-						
-						// Set camera [eyeX, eyeY, eyeZ], [targetX, targetY, targetZ], 0 for instant
-						apiRef.setCameraLookAt([x, y, z], [0, 0, 0], 0);
+			const sideLight = new THREE.PointLight(0xffffff, 1);
+			sideLight.position.set(10, 5, 10);
+			scene.add(sideLight);
 
-						// Update HUD
-						document.getElementById('load-val').innerText = Math.floor(self.progress * 100).toString().padStart(2, '0') + "%";
+			// 3. LOAD PORSCHE MODEL
+			const loader = new GLTFLoader();
+			let car;
+
+			// Optimized GLB model URL
+			loader.load('https://raw.githubusercontent.com/pmndrs/drei-assets/master/911-transformed.glb', (gltf) => {
+				car = gltf.scene;
+				scene.add(car);
+				car.position.y = -1;
+				car.rotation.y = -Math.PI / 2; // Show side profile initially
+
+				// 4. THE MAGIC: SCROLLTRIGGER ANIMATION
+				const tl = gsap.timeline({
+					scrollTrigger: {
+						trigger: "main",
+						start: "top top",
+						end: "bottom bottom",
+						scrub: 1, // Smoothness of the catch-up
 					}
 				});
+
+				tl.to(car.rotation, { y: Math.PI * 1.5 }, 0) // Rotate 360 as we scroll
+				  .to(camera.position, { z: 6, y: 1 }, 0)      // Zoom in deep
+				  .to(car.position, { x: 1.5 }, 0.3)           // Move car to the side for text
+				  .to(car.position, { x: -1.5 }, 0.6)          // Move car to other side
+				  .to(camera.position, { z: 12, y: 0 }, 0.8);  // Zoom back out for final CTA
+
+				// Entrance animation
+				gsap.from("#hero-text", { y: 200, opacity: 0, duration: 1.5, ease: "power4.out" });
+			});
+
+			// 5. ANIMATION LOOP
+			function animate() {
+				requestAnimationFrame(animate);
+				if (car) {
+					// Add a tiny bit of "float" even when not scrolling
+					car.position.y = -1 + Math.sin(Date.now() * 0.001) * 0.05;
+				}
+				renderer.render(scene, camera);
 			}
 
-			function initUIAnims() {
-				gsap.to("#hero-tag", { opacity: 1, letterSpacing: "1.2em", duration: 2 });
+			// 6. RESPONSIVE RESIZE
+			window.addEventListener('resize', () => {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			});
 
-				gsap.utils.toArray('.reveal').forEach(el => {
-					gsap.from(el, {
-						scrollTrigger: { trigger: el, start: "top 85%" },
-						opacity: 0,
-						y: 60,
-						duration: 1.5,
-						ease: "power4.out"
-					});
-				});
-
-				gsap.from(".reveal-right", {
-					scrollTrigger: { trigger: ".reveal-right", start: "top 85%" },
-					opacity: 0,
-					x: 100,
-					duration: 1.5,
-					ease: "power4.out"
-				});
-			}
+			animate();
 		</script>
 	</body>
 </html>
-
-<style is:global>
-	/* Custom Smooth Scrolling for the Track */
-	html {
-		scroll-behavior: smooth;
-	}
-	
-	/* Hide scrollbar for clean UX */
-	::-webkit-scrollbar {
-		display: none;
-	}
-</style>

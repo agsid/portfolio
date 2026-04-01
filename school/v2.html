@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dash</title>
+    <link rel="icon" href="https://agsid.alliedalgos.org/2.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            height: 100vh;
+            background: url('https://wallpapers-clan.com/wp-content/uploads/2025/07/cityscape-tokyo-rainy-neon-desktop-wallpaper-preview.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            overflow: hidden;
+            position: relative;
+            transition: background-image 0.5s ease-in-out;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.1);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .vignette {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 80%);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .overlay-base {
+            position: fixed;
+            inset: 0;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 3000;
+        }
+        .search-overlay { z-index: 5000; backdrop-filter: blur(5px); }
+        .glass-card {
+            background: rgba(40,40,40,0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            color: white;
+            position: relative;
+        }
+        .ctx-menu {
+            background: rgba(50,50,50,0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.35);
+            padding: 4px 0;
+            min-width: 150px;
+            display: none;
+            position: fixed;
+            z-index: 4000;
+        }
+        .ctx-item {
+            padding: 8px 15px;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.9);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .ctx-item:hover { background: rgba(255,255,255,0.1); }
+
+        /* Battery */
+        .battery-bar-wrap {
+            position: relative;
+            width: 26px; height: 11px;
+            border: 1.5px solid rgba(255,255,255,0.7);
+            border-radius: 3px;
+        }
+        .battery-bar-wrap::after {
+            content: '';
+            position: absolute;
+            right: -5px; top: 50%;
+            transform: translateY(-50%);
+            width: 3px; height: 5px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 0 2px 2px 0;
+        }
+        .battery-fill {
+            position: absolute;
+            left: 1px; top: 1px; bottom: 1px;
+            border-radius: 2px;
+            transition: width 0.5s, background 0.5s;
+        }
+
+        /* Dock */
+        .dock {
+            position: fixed;
+            bottom: 8px; left: 50%;
+            transform: translateX(-50%);
+            height: 90px;
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 10px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            user-select: none;
+            z-index: 10;
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dock.vertical-left {
+            left: 8px; bottom: 50%;
+            transform: translateY(50%);
+            height: auto; width: 64px;
+            flex-direction: column; padding: 24px 0;
+        }
+        .dock.vertical-right {
+            right: 8px; left: auto; bottom: 50%;
+            transform: translateY(50%);
+            height: auto; width: 64px;
+            flex-direction: column; padding: 24px 0;
+        }
+        .dock-item { position: relative; padding-bottom: 5px; }
+        .dock-icon {
+            width: 60px; height: 60px;
+            border-radius: 12px;
+            cursor: pointer;
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.6));
+            transform-origin: bottom center;
+            transition: transform 0.2s ease-out, filter 0.2s ease-out;
+        }
+        .dock-icon.mag-lg {
+            transform: scale(1.5) translateY(-15px);
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.9));
+        }
+        .dock.vertical-left .dock-icon.mag-lg,
+        .dock.vertical-right .dock-icon.mag-lg { transform: scale(1.5) translateX(15px); }
+
+        .app-tooltip {
+            position: absolute;
+            bottom: 60px; left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.73rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .dock.vertical-left .app-tooltip {
+            left: 70px; bottom: auto; top: 50%;
+            transform: translateY(-50%) translateX(5px);
+        }
+        .dock.vertical-right .app-tooltip {
+            right: 70px; left: auto; bottom: auto; top: 50%;
+            transform: translateY(-50%) translateX(-5px);
+        }
+        .dock-item:hover .app-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .dock.vertical-left .dock-item:hover .app-tooltip,
+        .dock.vertical-right .dock-item:hover .app-tooltip { transform: translateY(-50%) translateX(0); }
+
+        .running-dot {
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 4px; height: 4px;
+            border-radius: 9999px;
+            background: white;
+            box-shadow: 0 0 5px 1px rgba(255,255,255,0.7);
+            display: none;
+        }
+        .dock-sep {
+            width: 1px; height: 40px;
+            background: rgba(255,255,255,0.2);
+            margin: 0 10px; border-radius: 1px;
+        }
+        .dock.vertical-left .dock-sep,
+        .dock.vertical-right .dock-sep { width: 40px; height: 1px; margin: 10px 0; }
+
+        @keyframes bounce {
+            0%,100% { transform: translateY(0); }
+            20% { transform: translateY(-10px); }
+            40% { transform: translateY(0); }
+            60% { transform: translateY(-5px); }
+            80% { transform: translateY(0); }
+        }
+        .bounce { animation: bounce 0.6s ease-out; }
+
+        /* Clock */
+        .clock-box {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Google Sans Code', monospace;
+            font-weight: 900;
+            text-align: center;
+            text-shadow: 0 10px 8px rgba(0,0,0,0.8);
+            z-index: 5;
+            padding: 80px 160px;
+            border-radius: 50px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            line-height: 1.2;
+        }
+
+        /* Wallpaper grid */
+        .wallpaper-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+            gap: 12px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .wp-item {
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            aspect-ratio: 16/9;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+        .wp-item:hover { border-color: rgba(255,255,255,0.4); }
+        .wp-item.selected { border-color: #007aff; box-shadow: 0 0 0 3px rgba(0,122,255,0.4); }
+        .wp-item img { width: 100%; height: 100%; object-fit: cover; }
+        .wp-item span {
+            position: absolute; bottom: 4px; left: 4px; right: 4px;
+            background: rgba(0,0,0,0.6);
+            font-size: 0.65rem; text-align: center;
+            padding: 2px 4px; border-radius: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* Topbar app icons */
+        .topbar-app-icon {
+            height: 16px; width: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .topbar-app-icon:hover { transform: scale(1.1); }
+
+        /* Spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 28px; height: 28px;
+            border: 3px solid rgba(255,255,255,0.25);
+            border-top-color: #007aff;
+            border-radius: 9999px;
+            animation: spin 0.8s linear infinite;
+            margin: 12px auto;
+        }
+
+        /* Orient btn active */
+        .orient-btn { transition: background 0.15s, border-color 0.15s; }
+        .orient-btn.active { background: #2563eb !important; border-color: #2563eb !important; }
+
+        /* URL input */
+        .url-input {
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px;
+            color: white;
+            padding: 4px 8px;
+            width: 190px;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .url-input:focus { border-color: #007aff; background: rgba(0,122,255,0.12); }
+        .url-input::placeholder { color: rgba(255,255,255,0.35); }
+    </style>
+</head>
+<body>
+
+<div class="vignette"></div>
+
+<!-- Top Bar -->
+<div class="fixed top-0 left-0 right-0 h-[26px] bg-black/35 backdrop-blur-md flex items-center justify-between px-3 text-white text-xs font-medium select-none z-10">
+    <div class="flex items-center gap-2">
+        <img src="https://agsid.alliedalgos.org/2.svg" alt="Dash" class="h-[18px] w-auto">
+        <div id="running-apps-topbar" class="flex items-center gap-1"></div>
+    </div>
+    <!-- Battery pill -->
+    <div class="flex items-center gap-[5px] bg-white/10 border border-white/20 rounded-full px-2 py-[2px] text-[0.72rem] font-semibold">
+        <span id="charging-bolt" class="text-[#4cff72] text-[0.6rem] hidden"><i class="fas fa-bolt"></i></span>
+        <div class="battery-bar-wrap">
+            <div class="battery-fill" id="battery-fill"></div>
+        </div>
+        <span id="battery-pct" class="min-w-[28px]">--</span>
+    </div>
+</div>
+
+<!-- Clock -->
+<div class="clock-box">
+    <span class="block text-[100px]" id="time-part"></span>
+    <span class="block text-[20px] mt-1" id="date-part"></span>
+</div>
+
+<!-- Desktop context menu -->
+<div id="context-menu" class="ctx-menu">
+    <div class="ctx-item" id="ctx-wallpaper">Change Wallpaper</div>
+    <div class="ctx-item" id="ctx-reload">Reload Page</div>
+</div>
+
+<!-- App context menu -->
+<div id="app-ctx-menu" class="ctx-menu">
+    <div class="ctx-item" id="toggle-dock-btn"></div>
+</div>
+
+<!-- Topbar app context menu -->
+<div id="topbar-ctx-menu" class="ctx-menu">
+    <div class="ctx-item" id="terminate-btn">Close</div>
+</div>
+
+<!-- Wallpaper Modal -->
+<div id="wallpaper-overlay" class="overlay-base">
+    <div class="glass-card p-6 w-[90%] max-w-[680px] flex flex-col gap-4">
+        <h3 class="text-lg font-semibold">Change Wallpaper</h3>
+        <div id="wallpaper-grid" class="wallpaper-grid"></div>
+        <input id="wallpaper-url-input" type="text" placeholder="Or enter a custom image URL…"
+               class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-white/50 outline-none focus:border-blue-500 focus:bg-blue-500/10 transition">
+        <div class="flex justify-end gap-2">
+            <button id="wallpaper-cancel" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm transition">Cancel</button>
+            <button id="wallpaper-apply"  class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium transition">Apply</button>
+        </div>
+    </div>
+</div>
+
+<!-- Search Modal -->
+<div id="search-overlay" class="overlay-base search-overlay">
+    <div id="search-modal" class="glass-card p-6 w-[90%] max-w-[600px] flex flex-col gap-4" style="border-radius:18px">
+        <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-lg"></i>
+            <input id="search-input" type="text" placeholder="Search for apps…"
+                   class="w-full pl-10 pr-3 py-3 rounded-xl bg-white/10 border border-white/25 text-white text-lg outline-none focus:border-blue-500 focus:bg-blue-500/15 transition placeholder-white/40">
+        </div>
+        <div id="search-results" class="max-h-[300px] overflow-y-auto flex flex-col gap-1"></div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-overlay" class="overlay-base">
+    <div id="settings-modal" class="glass-card p-6 w-[90%] max-w-[800px] flex flex-col gap-6" style="max-height:85vh;overflow-y:auto">
+        <h3 class="text-lg font-semibold">System Settings</h3>
+        <div>
+            <h4 class="text-sm font-semibold mb-3 pb-1 border-b border-white/10">Dock Orientation</h4>
+            <div id="orient-options" class="grid grid-cols-3 gap-2"></div>
+        </div>
+        <div>
+            <h4 class="text-sm font-semibold mb-3 pb-1 border-b border-white/10">Manage Dock Apps &amp; Links</h4>
+            <div id="settings-app-list" class="flex flex-col gap-2 max-h-[340px] overflow-y-auto pr-1"></div>
+        </div>
+        <div class="flex justify-end mt-auto">
+            <button id="settings-close" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm transition">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Message container -->
+<div id="msg-container"></div>
+
+<!-- Dock -->
+<div class="dock" id="main-dock"></div>
+
+<script>
+    const D  = id => document.getElementById(id);
+    const Q  = s  => document.querySelector(s);
+    const QA = s  => document.querySelectorAll(s);
+
+    const el = {
+        runningApps:       D('running-apps-topbar'),
+        chargingBolt:      D('charging-bolt'),
+        batteryFill:       D('battery-fill'),
+        batteryPct:        D('battery-pct'),
+        timePart:          D('time-part'),
+        datePart:          D('date-part'),
+        desktop:           document.body,
+        dock:              D('main-dock'),
+        ctxMenu:           D('context-menu'),
+        ctxWallpaper:      D('ctx-wallpaper'),
+        ctxReload:         D('ctx-reload'),
+        appCtxMenu:        D('app-ctx-menu'),
+        toggleDockBtn:     D('toggle-dock-btn'),
+        topbarCtxMenu:     D('topbar-ctx-menu'),
+        terminateBtn:      D('terminate-btn'),
+        wallpaperOverlay:  D('wallpaper-overlay'),
+        wallpaperGrid:     D('wallpaper-grid'),
+        wallpaperUrlInput: D('wallpaper-url-input'),
+        wallpaperCancel:   D('wallpaper-cancel'),
+        wallpaperApply:    D('wallpaper-apply'),
+        searchOverlay:     D('search-overlay'),
+        searchModal:       D('search-modal'),
+        searchInput:       D('search-input'),
+        searchResults:     D('search-results'),
+        settingsOverlay:   D('settings-overlay'),
+        settingsModal:     D('settings-modal'),
+        orientOptions:     D('orient-options'),
+        settingsAppList:   D('settings-app-list'),
+        settingsClose:     D('settings-close'),
+        msgContainer:      D('msg-container'),
+    };
+
+    let currentCtxAppId = null;
+    let runningAppsList = [];
+    let dockedAppIds    = JSON.parse(localStorage.getItem('dockedAppIds')) || ['search','docs','slides','canva','spotify','schoology','canva','gmail','calendar'];
+
+    const ALL_APPS = [
+        { id:'search',      name:'Search',      icon:'https://icon-library.com/images/app-icon-search/app-icon-search-8.jpg',                                                                        url:null },
+        { id:'docs',       name:'Google Docs',    icon:'https://www.computerhope.com/jargon/g/google-docs.png',                                     url:'https://docs.google.com' },
+        { id:'canva',      name:'Canva',       icon:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-8rMqypU3dU1HRE3xey_O5ND_D6ZkchykRA&s', url:'https://canva.com' },
+        { id:'slides',     name:'Google Slides',  icon:'https://www.computerhope.com/jargon/g/google-slides.png',                                   url:'https://slides.google.com' },
+        { id:'spotify',     name:'Spotify',     icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/1200px-Spotify_logo%2C_2019.svg.png',                 url:'https://open.spotify.com' },
+        { id:'schoology',   name:'Schoology',   icon:'https://resources.finalsite.net/images/f_auto,q_auto/v1682013957/lakelandk12org/ryosf3ejbloeoxdmiccc/schoology.png',                                     url:'https://wilton.schoology.com' },
+        { id:'gmail',       name:'Gmail',       icon:'https://cdn2.downdetector.com/static/uploads/logo/gmail_logo_hSykdMC.jpeg',                                     url:'https://mail.google.com' },
+        { id:'calendar',    name:'Google Calendar', icon:'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Calendar_icon_(2020).svg/960px-Google_Calendar_icon_(2020).svg.png',                              url:'https://calendar.google.com' },
+        { id:'ubuntu',      name:'Settings',    icon:'https://upload.wikimedia.org/wikipedia/commons/e/ea/Settings_%28iOS%29.png',                                                                   url:null },
+    ];
+
+    const WALLPAPERS = [
+        { name:'Tokyo Cityscape',    url:'https://wallpapers-clan.com/wp-content/uploads/2025/07/cityscape-tokyo-rainy-neon-desktop-wallpaper-preview.jpg' },
+        { name:'Northern Lights',    url:'https://wallpapers-clan.com/wp-content/uploads/2024/12/northern-lights-mountain-view-desktop-wallpaper-cover-768x432.jpg' },
+        { name:'Among Us Astronaut', url:'https://wallpapers-clan.com/wp-content/uploads/2025/06/among-us-art-pink-cosmic-astronaut-desktop-wallpaper-preview.jpg' },
+    ];
+
+    const getAppUrls  = () => JSON.parse(localStorage.getItem('appUrls') || '{}');
+    const saveAppUrls = v  => localStorage.setItem('appUrls', JSON.stringify(v));
+    const resolveUrl  = id => {
+        const saved = getAppUrls()[id];
+        if (saved !== undefined) return saved;
+        return ALL_APPS.find(a => a.id === id)?.url ?? null;
+    };
+
+    const closeAll = (except = null) => {
+        [el.ctxMenu, el.appCtxMenu, el.topbarCtxMenu,
+         el.searchOverlay, el.wallpaperOverlay, el.settingsOverlay
+        ].forEach(e => { if (e !== except) e.style.display = 'none'; });
+        if (el.msgContainer.firstChild && el.msgContainer.firstChild !== except)
+            el.msgContainer.innerHTML = '';
+    };
+
+    const showMsg = (title, body, loading = false, autoClose = 0) => {
+        el.msgContainer.innerHTML = '';
+        const wrap = document.createElement('div');
+        wrap.className = 'overlay-base';
+        wrap.style.display = 'flex';
+        wrap.innerHTML = `
+            <div class="glass-card p-6 max-w-sm w-[90%] text-center flex flex-col items-center gap-4">
+                <h3 class="text-lg font-semibold">${title}</h3>
+                ${loading ? '<div class="spinner"></div>' : ''}
+                <p class="text-sm text-white/80">${body}</p>
+                ${loading ? '' : '<button id="msg-ok" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm font-medium transition">OK</button>'}
+            </div>`;
+        el.msgContainer.appendChild(wrap);
+        if (!loading) D('msg-ok').addEventListener('click', () => wrap.remove());
+        if (autoClose > 0 && !loading) setTimeout(() => wrap.isConnected && wrap.remove(), autoClose);
+    };
+
+    const handleAppClick = (appId, iconEl = null) => {
+        if (appId === 'search') {
+            closeAll();
+            el.searchOverlay.style.display = 'flex';
+            el.searchInput.value = '';
+            el.searchInput.focus();
+            renderSearchResults();
+            return;
+        }
+        if (appId === 'ubuntu') { openSettings(); return; }
+
+        if (iconEl) {
+            iconEl.classList.add('bounce');
+            iconEl.addEventListener('animationend', () => iconEl.classList.remove('bounce'), { once: true });
+        }
+
+        const url = resolveUrl(appId);
+        closeAll();
+        if (url) {
+            window.open(url, '_blank');
+            if (!runningAppsList.includes(appId)) runningAppsList.push(appId);
+            refreshIndicators();
+        } else {
+            const app = ALL_APPS.find(a => a.id === appId);
+            showMsg('No Link Set', `No URL configured for <b>${app?.name ?? appId}</b>.<br>Edit it in <b>Settings → Manage Dock Apps</b>.`, false, 4000);
+        }
+    };
+
+    const refreshIndicators = () => {
+        QA('.dock-item').forEach(item => {
+            const dot = item.querySelector('.running-dot');
+            if (dot) dot.style.display = runningAppsList.includes(item.dataset.appId) ? 'block' : 'none';
+        });
+        el.runningApps.innerHTML = '';
+        runningAppsList.forEach(id => {
+            const app = ALL_APPS.find(a => a.id === id);
+            if (!app) return;
+            const img = document.createElement('img');
+            img.src = app.icon; img.alt = app.name;
+            img.className = 'topbar-app-icon rounded';
+            img.dataset.appId = id;
+            img.addEventListener('contextmenu', e => {
+                e.preventDefault(); e.stopPropagation();
+                currentCtxAppId = id;
+                el.terminateBtn.textContent = `Close ${app.name}`;
+                Object.assign(el.topbarCtxMenu.style, { display:'block', left:`${e.clientX}px`, top:`${e.clientY}px` });
+                closeAll(el.topbarCtxMenu);
+            });
+            el.runningApps.appendChild(img);
+        });
+    };
+
+    const updateClock = () => {
+        const n = new Date();
+        el.timePart.textContent = n.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
+        el.datePart.textContent  = n.toLocaleDateString('en-US',  { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    };
+
+    const updateBattery = b => {
+        const pct = Math.floor(b.level * 100);
+        el.batteryPct.textContent  = `${pct}%`;
+        el.batteryFill.style.width = `${pct}%`;
+        el.batteryFill.style.background = pct > 50 ? '#4cff72' : pct > 20 ? '#ffd60a' : '#ff453a';
+        el.chargingBolt.classList.toggle('hidden', !b.charging);
+    };
+
+    const renderSearchResults = (term = '') => {
+        el.searchResults.innerHTML = '';
+        const hits = ALL_APPS.filter(a => a.name.toLowerCase().includes(term.toLowerCase()));
+        if (!hits.length) {
+            el.searchResults.innerHTML = '<p class="text-center text-white/50 py-5 italic text-sm">No apps found.</p>';
+            return;
+        }
+        hits.forEach(app => {
+            const url = resolveUrl(app.id);
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition text-sm text-white/90';
+            row.innerHTML = `
+                <img src="${app.icon}" class="w-8 h-8 rounded-lg object-contain" alt="${app.name}">
+                <span class="flex-1">${app.name}</span>
+                <small class="text-white/40 text-xs truncate max-w-[160px]">${url || '—'}</small>`;
+            row.addEventListener('click', () => handleAppClick(app.id));
+            row.addEventListener('contextmenu', e => {
+                e.preventDefault(); e.stopPropagation();
+                currentCtxAppId = app.id;
+                el.toggleDockBtn.textContent = dockedAppIds.includes(app.id) ? 'Remove from Dock' : 'Add to Dock';
+                Object.assign(el.appCtxMenu.style, { display:'block', left:`${e.clientX}px`, top:`${e.clientY}px` });
+                closeAll(el.appCtxMenu);
+            });
+            el.searchResults.appendChild(row);
+        });
+    };
+
+    const setWallpaper = url => {
+        el.desktop.style.backgroundImage = `url('${url}')`;
+        localStorage.setItem('wallpaper', url);
+    };
+
+    const renderWallpaperGrid = () => {
+        el.wallpaperGrid.innerHTML = '';
+        const cur = localStorage.getItem('wallpaper') || WALLPAPERS[0].url;
+        WALLPAPERS.forEach(w => {
+            const item = document.createElement('div');
+            item.className = 'wp-item' + (w.url === cur ? ' selected' : '');
+            item.dataset.url = w.url;
+            item.innerHTML = `<img src="${w.url}" alt="${w.name}"><span>${w.name}</span>`;
+            item.addEventListener('click', () => {
+                QA('.wp-item').forEach(x => x.classList.remove('selected'));
+                item.classList.add('selected');
+                el.wallpaperUrlInput.value = w.url;
+            });
+            el.wallpaperGrid.appendChild(item);
+        });
+        el.wallpaperUrlInput.value = cur;
+    };
+
+    const setDockOrientation = o => {
+        el.dock.classList.remove('vertical-left','vertical-right');
+        Object.assign(el.dock.style, { left:'', right:'', bottom:'', top:'', transform:'', width:'', height:'', padding:'', flexDirection:'' });
+
+        if (o === 'horizontal-bottom') {
+            Object.assign(el.dock.style, { bottom:'8px', left:'50%', transform:'translateX(-50%)', height:'64px', padding:'0 24px', flexDirection:'row' });
+        } else if (o === 'vertical-left') {
+            el.dock.classList.add('vertical-left');
+            Object.assign(el.dock.style, { left:'8px', bottom:'50%', transform:'translateY(50%)', width:'64px', height:'auto', padding:'24px 0', flexDirection:'column' });
+        } else if (o === 'vertical-right') {
+            el.dock.classList.add('vertical-right');
+            Object.assign(el.dock.style, { right:'8px', left:'auto', bottom:'50%', transform:'translateY(50%)', width:'64px', height:'auto', padding:'24px 0', flexDirection:'column' });
+        }
+        localStorage.setItem('dockOrientation', o);
+        QA('.orient-btn').forEach(b => b.classList.toggle('active', b.dataset.orient === o));
+    };
+
+    const createDockItem = app => {
+        const item = document.createElement('div');
+        item.className = 'dock-item';
+        item.dataset.appId = app.id;
+
+        const img = document.createElement('img');
+        img.src = app.icon; img.alt = app.name;
+        img.className = 'dock-icon';
+        item.appendChild(img);
+
+        const tip = document.createElement('div');
+        tip.className = 'app-tooltip';
+        tip.textContent = app.name;
+        item.appendChild(tip);
+
+        const dot = document.createElement('div');
+        dot.className = 'running-dot';
+        item.appendChild(dot);
+
+        item.addEventListener('mouseenter', () => img.classList.add('mag-lg'));
+        item.addEventListener('mouseleave', () => {
+            img.classList.remove('mag-lg');
+            QA('.dock-icon').forEach(o => { if (o !== img) o.style.transform = ''; });
+        });
+        item.addEventListener('mousemove', e => {
+            const r = item.getBoundingClientRect();
+            const maxD = r.width * 1.5;
+            QA('.dock-icon').forEach(o => {
+                if (o === img) return;
+                const or = o.getBoundingClientRect();
+                const d  = Math.abs(e.clientX - (or.left + or.width/2));
+                o.style.transform = d < maxD ? `scale(${1 - (d/maxD)*0.3})` : '';
+            });
+        });
+
+        item.addEventListener('click', () => handleAppClick(app.id, img));
+        item.addEventListener('contextmenu', e => {
+            e.preventDefault(); e.stopPropagation();
+            currentCtxAppId = app.id;
+            el.toggleDockBtn.textContent = dockedAppIds.includes(app.id) ? 'Remove from Dock' : 'Add to Dock';
+            Object.assign(el.appCtxMenu.style, { display:'block', left:`${e.clientX}px`, top:`${e.clientY}px` });
+            closeAll(el.appCtxMenu);
+        });
+
+        el.dock.appendChild(item);
+    };
+
+    const renderDock = () => {
+        el.dock.innerHTML = '';
+        ALL_APPS.filter(a => dockedAppIds.includes(a.id)).forEach(createDockItem);
+        const sep = document.createElement('div');
+        sep.className = 'dock-sep';
+        el.dock.appendChild(sep);
+        refreshIndicators();
+    };
+
+    const openSettings = () => {
+        closeAll();
+        el.settingsOverlay.style.display = 'flex';
+        renderSettings();
+    };
+
+    const renderSettings = () => {
+        el.orientOptions.innerHTML = '';
+        const orientations = [
+            { id:'horizontal-bottom', label:'Horizontal (Bottom)' },
+            { id:'vertical-left',     label:'Vertical (Left)' },
+            { id:'vertical-right',    label:'Vertical (Right)' },
+        ];
+        const curO = localStorage.getItem('dockOrientation') || 'horizontal-bottom';
+        orientations.forEach(o => {
+            const btn = document.createElement('button');
+            btn.className = `orient-btn px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-white/15 text-sm text-white cursor-pointer${o.id === curO ? ' active' : ''}`;
+            btn.dataset.orient = o.id;
+            btn.textContent = o.label;
+            btn.addEventListener('click', () => setDockOrientation(o.id));
+            el.orientOptions.appendChild(btn);
+        });
+
+        el.settingsAppList.innerHTML = '';
+        const savedUrls = getAppUrls();
+        ALL_APPS.forEach(app => {
+            if (app.id === 'ubuntu') return;
+            const inDock  = dockedAppIds.includes(app.id);
+            const curUrl  = savedUrls[app.id] !== undefined ? savedUrls[app.id] : (app.url || '');
+
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition';
+            row.innerHTML = `
+                <img src="${app.icon}" alt="${app.name}" class="w-8 h-8 rounded-lg object-contain flex-shrink-0">
+                <span class="flex-1 text-sm text-white/90">${app.name}</span>
+                <input class="url-input" type="text" placeholder="https://…" value="${curUrl}" data-app-id="${app.id}">
+                <button class="toggle-btn flex-shrink-0 px-3 py-1 rounded-md text-xs font-medium transition ${inDock ? 'bg-red-600 hover:bg-red-500' : 'bg-green-600 hover:bg-green-500'}" data-app-id="${app.id}">
+                    ${inDock ? 'Remove' : 'Add to Dock'}
+                </button>`;
+
+            row.querySelector('.url-input').addEventListener('change', e => {
+                const urls = getAppUrls();
+                urls[app.id] = e.target.value.trim();
+                saveAppUrls(urls);
+            });
+
+            row.querySelector('.toggle-btn').addEventListener('click', e => {
+                const id  = app.id;
+                const idx = dockedAppIds.indexOf(id);
+                if (idx > -1) {
+                    dockedAppIds.splice(idx, 1);
+                    e.target.textContent = 'Add to Dock';
+                    e.target.className = e.target.className.replace('bg-red-600 hover:bg-red-500','bg-green-600 hover:bg-green-500');
+                } else {
+                    dockedAppIds.push(id);
+                    e.target.textContent = 'Remove';
+                    e.target.className = e.target.className.replace('bg-green-600 hover:bg-green-500','bg-red-600 hover:bg-red-500');
+                }
+                localStorage.setItem('dockedAppIds', JSON.stringify(dockedAppIds));
+                renderDock();
+            });
+
+            el.settingsAppList.appendChild(row);
+        });
+    };
+
+    const init = () => {
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(b => {
+                updateBattery(b);
+                b.addEventListener('levelchange',    () => updateBattery(b));
+                b.addEventListener('chargingchange', () => updateBattery(b));
+            }).catch(() => { el.batteryPct.textContent = 'N/A'; });
+        } else {
+            el.batteryPct.textContent = 'N/A';
+        }
+
+        setDockOrientation(localStorage.getItem('dockOrientation') || 'horizontal-bottom');
+        renderDock();
+        const savedWp = localStorage.getItem('wallpaper');
+        if (savedWp) setWallpaper(savedWp);
+
+        document.addEventListener('click', e => {
+            const inside = [el.ctxMenu, el.appCtxMenu, el.topbarCtxMenu,
+                            el.searchModal, el.wallpaperOverlay, el.settingsModal
+                           ].some(x => x?.contains(e.target));
+            if (!inside && !e.target.closest('.dock-item') && !e.target.closest('.topbar-app-icon'))
+                closeAll();
+        });
+
+        el.desktop.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            closeAll();
+            Object.assign(el.ctxMenu.style, { display:'block', left:`${e.clientX}px`, top:`${e.clientY}px` });
+        });
+
+        el.ctxWallpaper.addEventListener('click', () => {
+            closeAll();
+            el.wallpaperOverlay.style.display = 'flex';
+            renderWallpaperGrid();
+        });
+        el.ctxReload.addEventListener('click', () => location.reload());
+
+        el.wallpaperCancel.addEventListener('click', () => el.wallpaperOverlay.style.display = 'none');
+        el.wallpaperApply.addEventListener('click', () => {
+            const url = el.wallpaperUrlInput.value.trim();
+            if (url) { setWallpaper(url); el.wallpaperOverlay.style.display = 'none'; }
+            else showMsg('Error', 'Please enter a valid image URL.', false, 3000);
+        });
+
+        el.searchInput.addEventListener('input', e => renderSearchResults(e.target.value));
+        el.searchOverlay.addEventListener('click', e => { if (e.target === el.searchOverlay) closeAll(); });
+
+        el.settingsClose.addEventListener('click', () => closeAll());
+
+        el.toggleDockBtn.addEventListener('click', () => {
+            if (!currentCtxAppId) return;
+            const idx = dockedAppIds.indexOf(currentCtxAppId);
+            if (idx > -1) dockedAppIds.splice(idx, 1);
+            else dockedAppIds.push(currentCtxAppId);
+            localStorage.setItem('dockedAppIds', JSON.stringify(dockedAppIds));
+            renderDock();
+            closeAll();
+            if (el.settingsOverlay.style.display === 'flex') renderSettings();
+        });
+
+        el.terminateBtn.addEventListener('click', () => {
+            if (!currentCtxAppId) return;
+            closeAll();
+            const idx = runningAppsList.indexOf(currentCtxAppId);
+            if (idx > -1) runningAppsList.splice(idx, 1);
+            refreshIndicators();
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

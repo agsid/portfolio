@@ -25,63 +25,7 @@ const {
 		<BaseHead title={title} description={description} image={image} />
         </head>
 
-		<script>
-			import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
-
-			const canvas = document.querySelector('#car-canvas');
-			const scene = new THREE.Scene();
-			const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-			const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			renderer.setPixelRatio(window.devicePixelRatio);
-
-			// Creating a "Cyber-Grid" Floor
-			const grid = new THREE.GridHelper(100, 50, 0x00f2ff, 0x222222);
-			scene.add(grid);
-
-			// Animated "Particles" to simulate speed
-			const particlesGeometry = new THREE.BufferGeometry();
-			const count = 1500;
-			const positions = new Float32Array(count * 3);
-			for(let i=0; i<count*3; i++) {
-				positions[i] = (Math.random() - 0.5) * 100;
-			}
-			particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-			const particlesMaterial = new THREE.PointsMaterial({ size: 0.05, color: 0x00f2ff });
-			const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-			scene.add(particles);
-
-			camera.position.z = 5;
-			camera.position.y = 2;
-
-			function animate() {
-				requestAnimationFrame(animate);
-				
-				// Move grid and particles to create motion vibe
-				grid.position.z += 0.2;
-				if (grid.position.z > 2) grid.position.z = 0;
-				
-				particles.rotation.y += 0.001;
-				particles.position.z += 0.5;
-				if (particles.position.z > 50) particles.position.z = 0;
-
-				renderer.render(scene, camera);
-			}
-
-			window.addEventListener('resize', () => {
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-				renderer.setSize(window.innerWidth, window.innerHeight);
-			});
-
-			animate();
-		</script>
 	<body>
-<nav>
-			<div class="logo">ASTRO<span>RAW</span></div>
-			<div class="nav-right">01 // SPECS</div>
-		</nav>
 		
 
 		<footer>
