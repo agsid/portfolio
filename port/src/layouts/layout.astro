@@ -1,0 +1,35 @@
+---
+// Import your SEO component (optional but recommended)
+import Top from '../components/header.astro';
+import Sidebar from '../components/sidebar.astro';
+import BaseHead from '../components/head.astro';
+import '../styles/global.css';
+
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { 
+  title, 
+  description = "Default description for my awesome Astro site.", 
+  image 
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} image={image} />
+        </head>
+
+	<body>
+		
+
+		<footer>
+			<p>&copy; {new Date().getFullYear()} Sid's Portfolio</p>
+		</footer>
+	</body>
+</html>
